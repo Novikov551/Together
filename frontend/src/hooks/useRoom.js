@@ -212,21 +212,27 @@ export function useRoom() {
   const toggleMic = useCallback(async () => {
     if (!roomRef.current) return
     const next = !isMicOn
-    await roomRef.current.localParticipant.setMicrophoneEnabled(next)
     setIsMicOn(next)
     next ? playMicOn() : playMicOff()
-    updateParticipants()
+    try {
+      await roomRef.current.localParticipant.setMicrophoneEnabled(next)
+      updateParticipants()
+    } catch (e) {
+      console.warn('Ошибка микрофона:', e)
+      setIsMicOn(!next)
+    }
   }, [isMicOn, updateParticipants])
 
   const toggleCam = useCallback(async () => {
     if (!roomRef.current) return
     const next = !isCamOn
+    setIsCamOn(next)
     try {
       await roomRef.current.localParticipant.setCameraEnabled(next)
-      setIsCamOn(next)
       updateParticipants()
     } catch (e) {
       console.warn('Ошибка камеры:', e)
+      setIsCamOn(!next)
     }
   }, [isCamOn, updateParticipants])
 
