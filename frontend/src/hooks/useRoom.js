@@ -225,9 +225,13 @@ export function useRoom() {
   const toggleCam = useCallback(async () => {
     if (!roomRef.current) return
     const next = !isCamOn
-    await roomRef.current.localParticipant.setCameraEnabled(next)
-    setIsCamOn(next)
-    updateParticipants()
+    try {
+      await roomRef.current.localParticipant.setCameraEnabled(next)
+      setIsCamOn(next)
+      updateParticipants()
+    } catch (e) {
+      console.warn('Ошибка камеры:', e)
+    }
   }, [isCamOn, updateParticipants])
 
   const toggleScreen = useCallback(async () => {
@@ -235,6 +239,13 @@ export function useRoom() {
     if (!isScreenSharing) {
       try {
         const sq = SCREEN_QUALITY[screenQuality] || SCREEN_QUALITY.medium
+        // Обновляем кодек перед стартом
+        if (roomRef.current.options.publishDefaults) {
+          roomRef.current.options.publishDefaults.screenShareEncoding = {
+            maxBitrate: sq.maxBitrate,
+            maxFps: sq.maxFps,
+          }
+        }
         await roomRef.current.localParticipant.setScreenShareEnabled(true, {
           audio: true,
           resolution: sq.resolution,
@@ -260,6 +271,13 @@ export function useRoom() {
       try {
         await roomRef.current.localParticipant.setScreenShareEnabled(false)
         const sq = SCREEN_QUALITY[screenQuality] || SCREEN_QUALITY.medium
+        // Обновляем кодек в настройках комнаты перед перезапуском
+        if (roomRef.current.options.publishDefaults) {
+          roomRef.current.options.publishDefaults.screenShareEncoding = {
+            maxBitrate: sq.maxBitrate,
+            maxFps: sq.maxFps,
+          }
+        }
         await roomRef.current.localParticipant.setScreenShareEnabled(true, {
           audio: true,
           resolution: sq.resolution,
