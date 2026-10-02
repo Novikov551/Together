@@ -1,6 +1,8 @@
 import { useState, useEffect, useCallback } from 'react'
 import { getRooms, getRoomParticipants, createRoom } from '../../services/api'
 
+const PAGE_SIZE = 10
+
 export default function RoomList({ sessionToken, onJoinRoom }) {
   const [rooms, setRooms] = useState([])
   const [loading, setLoading] = useState(true)
@@ -12,6 +14,8 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
   const [newRoomName, setNewRoomName] = useState('')
   const [newRoomPassword, setNewRoomPassword] = useState('')
   const [creating, setCreating] = useState(false)
+  const [search, setSearch] = useState('')
+  const [page, setPage] = useState(0)
 
   const loadRooms = useCallback(async () => {
     try {
@@ -26,11 +30,20 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
     }
   }, [sessionToken])
 
-  useEffect(() => {
-    loadRooms()
-    const interval = setInterval(loadRooms, 10000)
-    return () => clearInterval(interval)
-  }, [loadRooms])
+  useEffect(() => { loadRooms() }, [loadRooms])
+
+  // Фильтрация по поиску
+  const filtered = search.trim()
+    ? rooms.filter(r => r.name.toLowerCase().includes(search.toLowerCase()))
+    : rooms
+
+  // Пагинация
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
+  const safePage = Math.min(page, totalPages - 1)
+  const paged = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
+
+  // Сброс страницы при поиске
+  useEffect(() => { setPage(0) }, [search])
 
   const handleRoomClick = useCallback(async (room) => {
     if (selectedRoom?.name === room.name) {
@@ -44,7 +57,7 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
       setLoadingParticipants(true)
       const data = await getRoomParticipants(sessionToken, room.name)
       setParticipants(data.participants || [])
-    } catch (e) {
+    } catch {
       setParticipants([])
     } finally {
       setLoadingParticipants(false)
@@ -52,11 +65,7 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
   }, [selectedRoom, sessionToken])
 
   const handleJoin = useCallback((room) => {
-    if (room.is_private) {
-      onJoinRoom(room.name, true)
-    } else {
-      onJoinRoom(room.name, false)
-    }
+    onJoinRoom(room.name, room.is_private)
   }, [onJoinRoom])
 
   const handleCreate = useCallback(async (e) => {
@@ -76,10 +85,6 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
     }
   }, [sessionToken, newRoomName, newRoomPassword, loadRooms])
 
-  if (loading && rooms.length === 0) {
-    return <div className="room-list-loading">Загрузка комнат...</div>
-  }
-
   return (
     <div className="room-list">
       <div className="room-list-header">
@@ -90,6 +95,16 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
             {showCreate ? '✕' : '+ Создать'}
           </button>
         </div>
+      </div>
+
+      {/* Поиск */}
+      <div className="room-search">
+        <input
+          type="text"
+          placeholder="Поиск комнаты..."
+          value={search}
+          onChange={e => setSearch(e.target.value)}
+        />
       </div>
 
       {error && <div className="room-list-error">{error}</div>}
@@ -115,12 +130,16 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
         </form>
       )}
 
-      {rooms.length === 0 && !showCreate && (
-        <div className="room-list-empty">Нет активных комнат</div>
+      {loading && rooms.length === 0 && (
+        <div className="room-list-loading">Загрузка...</div>
+      )}
+
+      {!loading && filtered.length === 0 && (
+        <div className="room-list-empty">{search ? 'Ничего не найдено' : 'Нет активных комнат'}</div>
       )}
 
       <div className="room-items">
-        {rooms.map(room => (
+        {paged.map(room => (
           <div key={room.name} className={`room-item ${selectedRoom?.name === room.name ? 'selected' : ''}`}>
             <div className="room-item-main" onClick={() => handleRoomClick(room)}>
               <div className="room-item-info">
@@ -138,8 +157,8 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
                   <div className="room-participants-loading">Загрузка...</div>
                 ) : participants && participants.length > 0 ? (
                   <ul className="room-participants-list">
-                    {participants.map((name, i) => (
-                      <li key={i} className="room-participant">👤 {name}</li>
+                    {participants.map((p, i) => (
+                      <li key={i} className="room-participant">👤 {p}</li>
                     ))}
                   </ul>
                 ) : (
@@ -153,6 +172,15 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
           </div>
         ))}
       </div>
+
+      {/* Пагинация */}
+      {totalPages > 1 && (
+        <div className="room-pagination">
+          <button disabled={safePage === 0} onClick={() => setPage(p => p - 1)}>←</button>
+          <span>{safePage + 1} / {totalPages}</span>
+          <button disabled={safePage >= totalPages - 1} onClick={() => setPage(p => p + 1)}>→</button>
+        </div>
+      )}
     </div>
   )
 }
