@@ -69,16 +69,12 @@ export function useRoom() {
       publishDefaults: {
         videoEncoding: {
           maxBitrate: camPreset.maxBitrate,
-          maxFps: camPreset.maxFps,
+          maxFramerate: camPreset.maxFps,
         },
         screenShareEncoding: {
           maxBitrate: (SCREEN_QUALITY[screenQuality] || SCREEN_QUALITY.medium).maxBitrate,
-          maxFps: (SCREEN_QUALITY[screenQuality] || SCREEN_QUALITY.medium).maxFps,
+          maxFramerate: (SCREEN_QUALITY[screenQuality] || SCREEN_QUALITY.medium).maxFps,
         },
-        videoSimulcastLayers: [
-          { resolution: { width: 640, height: 360 }, maxBitrate: 300_000, maxFps: 15 },
-          camPreset,
-        ],
       },
     })
     roomRef.current = room
@@ -243,7 +239,7 @@ export function useRoom() {
         if (roomRef.current.options.publishDefaults) {
           roomRef.current.options.publishDefaults.screenShareEncoding = {
             maxBitrate: sq.maxBitrate,
-            maxFps: sq.maxFps,
+            maxFramerate: sq.maxFps,
           }
         }
         await roomRef.current.localParticipant.setScreenShareEnabled(true, {
@@ -275,7 +271,7 @@ export function useRoom() {
         if (roomRef.current.options.publishDefaults) {
           roomRef.current.options.publishDefaults.screenShareEncoding = {
             maxBitrate: sq.maxBitrate,
-            maxFps: sq.maxFps,
+            maxFramerate: sq.maxFps,
           }
         }
         await roomRef.current.localParticipant.setScreenShareEnabled(true, {
