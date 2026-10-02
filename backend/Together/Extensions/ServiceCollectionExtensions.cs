@@ -1,10 +1,12 @@
-﻿namespace Together.Extensions
+﻿using Together.Endpoints.Rooms.Adapters;
+
+namespace Together.Extensions
 {
     public static class ServiceCollectionExtensions
     {
         public static IServiceCollection AddWebApiAdapters(this IServiceCollection services)
         {
-            /*services.AddScoped<StartService>();*/
+            services.AddScoped<RoomsWebApiAdapter>();
 
             return services;
         }

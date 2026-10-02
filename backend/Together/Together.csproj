@@ -9,7 +9,7 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<PackageReference Include="Livekit.Server.Sdk.Dotnet" Version="1.2.2" />
+		<PackageReference Include="Livekit.Server.Sdk.Dotnet" Version="1.2.3" />
 		<PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.0" />
 		<PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.13" />
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="10.0.11" />
@@ -25,6 +25,10 @@
 		<PackageReference Include="Swashbuckle.AspNetCore.SwaggerUI" Version="6.5.0" />
 		<PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.22.0" />
 		<PackageReference Include="Unchase.Swashbuckle.AspNetCore.Extensions" Version="2.7.2" />
+	</ItemGroup>
+
+	<ItemGroup>
+	  <ProjectReference Include="..\Together.Logic\Together.Logic.csproj" />
 	</ItemGroup>
 
 </Project>

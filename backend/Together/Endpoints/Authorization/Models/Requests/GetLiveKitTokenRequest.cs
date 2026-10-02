@@ -9,5 +9,8 @@ namespace Together.Endpoints.Authorization.Models.Requests
 
         [JsonPropertyName("room_name")]
         public string RoomName { get; set; }
+
+        [JsonPropertyName("password")]
+        public string Password { get; set; }
     }
 }

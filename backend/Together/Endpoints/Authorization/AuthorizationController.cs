@@ -1,27 +1,32 @@
-﻿using System;
-using System.IdentityModel.Tokens.Jwt;
+﻿using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
-using Livekit.Server.Sdk.Dotnet;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Configuration;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Annotations;
 using Together.Endpoints.Authorization.Models.Requests;
 using Together.Endpoints.Authorization.Models.Responses;
+using Together.Integrations;
+using Together.Logic.Rooms;
 
 namespace Together.Endpoints.Authorization
 {
-    [SwaggerTag("Пользовательский справочник культур")]
+    [SwaggerTag("Авторизация")]
     [Route("api/authorization")]
     public class AuthorizationController : BaseController
     {
         private readonly IConfiguration _config;
+        private readonly IRoomService _roomStoreService;
+        private readonly LiveKitService _liveKitService;
 
-        public AuthorizationController(IConfiguration config)
+        public AuthorizationController(IConfiguration config,
+            IRoomService roomStoreService,
+            LiveKitService liveKitService)
         {
             _config = config;
+            _roomStoreService = roomStoreService;
+            _liveKitService = liveKitService;
         }
 
         [SwaggerOperation(Summary = "Вход")]
@@ -29,6 +34,8 @@ namespace Together.Endpoints.Authorization
         [ProducesResponseType(typeof(LoginResponse), 200)]
         public async Task<IActionResult> LoginAsync([FromBody] LoginRequest request, CancellationToken ct = default)
         {
+            ct.ThrowIfCancellationRequested();
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
@@ -60,28 +67,22 @@ namespace Together.Endpoints.Authorization
         [SwaggerOperation(Summary = "Получение токена LiveKit")]
         [HttpPost("token")]
         [ProducesResponseType(200)]
-        public IActionResult GetLiveKitToken([FromBody] GetLiveKitTokenRequest request)
+        public async Task<IActionResult> GetLiveKitToken([FromBody] GetLiveKitTokenRequest request,
+            CancellationToken ct = default)
         {
-            var liveKitConfig = _config.GetSection("LiveKit");
-            var apiKey = liveKitConfig["ApiKey"];
-            var apiSecret = liveKitConfig["ApiSecret"];
+            var result = await _roomStoreService.ValidatePasswordAsync(request.RoomName, request.Password, ct);
+            if(!result)
+            {
+                return Unauthorized("Неверный пароль от комнаты");
+            }
 
-            // Генерируем уникальный identity
-            var uniqueIdentity = $"{request.DisplayName}-{Random.Shared.Next(1000, 9999):X4}";
-
-            var token = new AccessToken(apiKey, apiSecret)
-                .WithIdentity(uniqueIdentity)
-                .WithName(request.DisplayName)
-                .WithGrants(new VideoGrants
-                {
-                    RoomJoin = true,
-                    Room = request.RoomName 
-                });
+            var token = await _liveKitService.GenerateTokenAsync(request.DisplayName, request.RoomName, ct);
+            var url = await _liveKitService.GetWebSocketUrlAsync(ct);
 
             return Ok(new LiveKitTokenResponse
             {
-                LiveKitToken = token.ToJwt(),
-                LiveKitUrl = liveKitConfig["WebSocketUrl"]
+                LiveKitToken = token,
+                LiveKitUrl = url
             });
         }
     }

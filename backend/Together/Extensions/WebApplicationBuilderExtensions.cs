@@ -16,6 +16,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.IdentityModel.Tokens;
+using Together.Logic.Extensions;
 
 namespace Together.Extensions
 {
@@ -90,10 +91,11 @@ namespace Together.Extensions
             //TODO добавить слой инфраструктуры
             /*builder.Services.AddInfrastructureServices(builder.Configuration, builder.Environment);*/
 
+
+            builder.Services.AddLogic();
             builder.Services.AddWebApiAdapters();
 
-            /*builder.Services.AddLogic(builder.Configuration);
-            builder.Services.AddMessaging(builder.Configuration);
+            /*builder.Services.AddMessaging(builder.Configuration);
             builder.Services.AddIntegrations();*/
 
             builder.Services.AddControllers(options =>

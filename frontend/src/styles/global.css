@@ -925,3 +925,69 @@ body {
 @media (max-width: 480px) {
   .video-grid.grid-2, .video-grid.grid-3 { grid-template-columns: 1fr; }
 }
+
+/* ==================== ROOM LIST ==================== */
+.room-list { display: flex; flex-direction: column; gap: 8px; max-height: 320px; overflow-y: auto; }
+.room-list-header { display: flex; align-items: center; justify-content: space-between; }
+.room-list-header h3 { font-size: 0.9rem; margin: 0; }
+.room-list-actions { display: flex; gap: 6px; }
+.room-refresh-btn, .room-create-btn {
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: 6px; padding: 4px 10px; font-size: 0.75rem;
+  color: var(--text); cursor: pointer; font-family: inherit;
+}
+.room-create-btn { background: var(--accent); color: white; border-color: var(--accent); }
+.room-create-form { display: flex; flex-direction: column; gap: 6px; padding: 8px; background: var(--surface-2); border-radius: 8px; }
+.room-create-form input { padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface); color: var(--text); font-size: 0.8rem; font-family: inherit; }
+.room-create-form button { padding: 6px; border-radius: 6px; border: none; background: var(--accent); color: white; cursor: pointer; font-family: inherit; font-size: 0.8rem; }
+.room-list-loading, .room-list-empty { color: var(--text-dim); font-size: 0.8rem; text-align: center; padding: 12px; }
+.room-list-error { color: #ef4444; font-size: 0.75rem; padding: 4px 8px; }
+.room-items { display: flex; flex-direction: column; gap: 4px; }
+.room-item { background: var(--surface-2); border-radius: 8px; overflow: hidden; border: 1px solid transparent; transition: border-color 0.15s; }
+.room-item.selected { border-color: var(--accent); }
+.room-item-main { display: flex; align-items: center; justify-content: space-between; padding: 10px 12px; cursor: pointer; }
+.room-item-main:hover { background: var(--surface); }
+.room-item-info { display: flex; align-items: center; gap: 8px; }
+.room-item-name { font-size: 0.85rem; font-weight: 500; }
+.room-badge-private { font-size: 0.65rem; background: rgba(251,146,60,0.15); color: #fb923c; padding: 2px 6px; border-radius: 4px; }
+.room-item-arrow { font-size: 0.7rem; color: var(--text-dim); }
+.room-participants { padding: 8px 12px; border-top: 1px solid var(--border); }
+.room-participants-loading, .room-participants-empty { color: var(--text-dim); font-size: 0.75rem; padding: 4px 0; }
+.room-participants-list { list-style: none; padding: 0; margin: 0 0 8px; }
+.room-participant { font-size: 0.8rem; padding: 3px 0; color: var(--text); }
+.room-join-btn {
+  width: 100%; padding: 8px; border-radius: 6px; border: none;
+  background: var(--green); color: white; font-weight: 600;
+  cursor: pointer; font-family: inherit; font-size: 0.85rem;
+}
+.room-join-btn:hover { opacity: 0.9; }
+
+/* ==================== LOBBY ROOMS TAB ==================== */
+.lobby-rooms-tab { display: flex; flex-direction: column; gap: 10px; }
+.lobby-identity { display: flex; align-items: center; gap: 10px; }
+.current-avatar.small { width: 36px; height: 36px; font-size: 1.2rem; cursor: pointer; }
+.lobby-name-input { flex: 1; }
+
+/* ==================== PASSWORD MODAL ==================== */
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000; backdrop-filter: blur(4px);
+}
+.modal-content {
+  background: var(--surface); border-radius: 12px;
+  border: 1px solid var(--border); width: 320px; max-width: 90vw;
+  overflow: hidden;
+}
+.modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); }
+.modal-header h3 { margin: 0; font-size: 0.95rem; }
+.modal-close { background: none; border: none; color: var(--text-dim); cursor: pointer; font-size: 1.1rem; padding: 0; }
+.modal-body { padding: 16px; display: flex; flex-direction: column; gap: 10px; }
+.modal-hint { margin: 0; font-size: 0.8rem; color: var(--text-dim); }
+.modal-body input { padding: 8px 12px; border-radius: 6px; border: 1px solid var(--border); background: var(--surface-2); color: var(--text); font-size: 0.85rem; font-family: inherit; }
+.modal-error { color: #ef4444; font-size: 0.75rem; }
+.modal-submit {
+  padding: 10px; border-radius: 6px; border: none;
+  background: var(--accent); color: white; font-weight: 600;
+  cursor: pointer; font-family: inherit; font-size: 0.9rem;
+}
