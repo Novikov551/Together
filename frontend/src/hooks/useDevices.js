@@ -9,18 +9,12 @@ export function useDevices() {
   const [selectedSpeaker, setSelectedSpeaker] = useState('')
 
   const loadDevices = useCallback(async () => {
-    // Запрашиваем разрешение по отдельности — если камеры нет, аудио всё равно получим
+    // Запрашиваем только микрофон — камера не нужна до явного включения
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
       stream.getTracks().forEach(t => t.stop())
     } catch (e) {
       console.warn('Нет доступа к микрофону:', e)
-    }
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true })
-      stream.getTracks().forEach(t => t.stop())
-    } catch (e) {
-      console.warn('Нет доступа к камере:', e)
     }
 
     let devices = []

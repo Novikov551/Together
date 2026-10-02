@@ -94,12 +94,7 @@ export default function Lobby({ sessionToken, onJoin, showToast, settings, updat
 
   return (
     <div className="screen lobby-screen">
-      {/* Слева — список комнат */}
-      <div className="lobby-sidebar">
-        <RoomList sessionToken={sessionToken} onJoinRoom={handleJoinRoom} />
-      </div>
-
-      {/* Справа — вход / настройки */}
+      {/* Слева — вход / настройки */}
       <div className="lobby-main">
         <div className="card lobby-card">
           <div className="lobby-tabs">
@@ -183,6 +178,11 @@ export default function Lobby({ sessionToken, onJoin, showToast, settings, updat
             </>
           )}
         </div>
+      </div>
+
+      {/* Справа — список комнат */}
+      <div className="lobby-sidebar">
+        <RoomList sessionToken={sessionToken} onJoinRoom={handleJoinRoom} />
       </div>
 
       {joinModal && (

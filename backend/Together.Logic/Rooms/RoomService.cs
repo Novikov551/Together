@@ -1,4 +1,4 @@
-﻿using System.Collections.Concurrent;
+using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using Together.Integrations;
@@ -21,12 +21,16 @@ namespace Together.Logic.Rooms
         {
             var rooms = await _liveKitService.GetRoomsAsync(ct);
 
-            return rooms.Select(e =>
+            var result = new List<RoomShortInfoDto>();
+            foreach (var roomName in rooms)
             {
-                var isPrivate = IsPrivateRoom(e);
+                var participants = await _liveKitService.GetRoomParticipantsAsync(roomName, ct);
+                if (participants.Count == 0) continue;
 
-                return new RoomShortInfoDto(e, isPrivate);
-            }).ToList();
+                var isPrivate = IsPrivateRoom(roomName);
+                result.Add(new RoomShortInfoDto(roomName, isPrivate));
+            }
+            return result;
         }
 
         public async Task CreateRoomAsync(string roomName, string? pass, CancellationToken ct = default)

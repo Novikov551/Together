@@ -983,14 +983,14 @@ body {
 .room-pagination span { font-size: 0.7rem; color: var(--text-dim); }
 
 /* ==================== LOBBY LAYOUT ==================== */
-.lobby-screen { display: flex; gap: 0; height: 100vh; }
-.lobby-sidebar {
-  width: 260px; min-width: 220px; padding: 16px;
-  background: var(--surface); border-right: 1px solid var(--border);
-  display: flex; flex-direction: column; overflow: hidden;
-}
+.lobby-screen { display: flex; gap: 0; height: 100vh; align-items: stretch; }
 .lobby-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .lobby-card { width: 100%; max-width: 380px; }
+.lobby-sidebar {
+  width: 280px; min-width: 240px; padding: 16px;
+  background: var(--surface); border-left: 1px solid var(--border);
+  display: flex; flex-direction: column; overflow: hidden;
+}
 .field-row { padding: 4px 0; }
 
 /* ==================== PASSWORD MODAL ==================== */

@@ -171,16 +171,6 @@ export function useRoom() {
       console.warn('Микрофон не включился:', e)
     }
 
-    // Камера (опционально)
-    try {
-      await room.localParticipant.setCameraEnabled(true, {
-        deviceId: cameraDeviceId || undefined,
-      })
-      setIsCamOn(true)
-    } catch (e) {
-      console.warn('Камера не найдена:', e)
-    }
-
     updateParticipants()
     return room
   }, [updateParticipants, cameraQuality, screenQuality])
