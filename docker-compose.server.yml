@@ -17,6 +17,9 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - LiveKit__WebSocketUrl=ws://localhost:7880
+      - LiveKitConfig__HttpUrl=http://host.docker.internal:7880
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       - livekit
 
