@@ -9,6 +9,7 @@ namespace Together.Logic.Rooms
     public class RoomService : IRoomService
     {
         private readonly ConcurrentDictionary<string, string> _rooms;
+        private readonly SemaphoreSlim _deleteLock = new(1, 1);
         private readonly LiveKitService _liveKitService;
 
         public RoomService(LiveKitService liveKitService)
@@ -65,11 +66,19 @@ namespace Together.Logic.Rooms
 
         public async Task DeleteRoomAsync(string roomName, CancellationToken ct = default)
         {
-            var participants = await _liveKitService.GetRoomParticipantsAsync(roomName, ct);
-            if (participants.Count > 0) return;
+            await _deleteLock.WaitAsync(ct);
+            try
+            {
+                var participants = await _liveKitService.GetRoomParticipantsAsync(roomName, ct);
+                if (participants.Count > 0) return;
 
-            await _liveKitService.DeleteRoomAsync(roomName, ct);
-            _rooms.TryRemove(roomName, out _);
+                await _liveKitService.DeleteRoomAsync(roomName, ct);
+                _rooms.TryRemove(roomName, out _);
+            }
+            finally
+            {
+                _deleteLock.Release();
+            }
         }
 
         #region Private

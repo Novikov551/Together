@@ -1,3 +1,4 @@
+﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using Together.Endpoints.Rooms.Adapters;
@@ -6,6 +7,7 @@ using Together.Endpoints.Rooms.Models.Responses;
 
 namespace Together.Endpoints.Rooms
 {
+    [Authorize]
     [SwaggerTag("Комнаты LiveKit")]
     [Route("api/rooms")]
     public class RoomsController : BaseController

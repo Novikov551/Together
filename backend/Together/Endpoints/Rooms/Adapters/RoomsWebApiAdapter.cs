@@ -1,4 +1,4 @@
-using Together.Endpoints.Rooms.Converters;
+﻿using Together.Endpoints.Rooms.Converters;
 using Together.Endpoints.Rooms.Models.Requests;
 using Together.Endpoints.Rooms.Models.Responses;
 using Together.Logic.Rooms;
@@ -14,7 +14,7 @@ namespace Together.Endpoints.Rooms.Adapters
             _roomsService = roomStoreService;
         }
 
-        public async Task<List<RoomShortInfoResponse>> GetAllAsync(CancellationToken ct = default)
+        internal async Task<List<RoomShortInfoResponse>> GetAllAsync(CancellationToken ct = default)
         {
             var rooms = await _roomsService.GetAllRoomsAsync(ct);
 

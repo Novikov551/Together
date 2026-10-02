@@ -17,7 +17,7 @@ namespace Together.Endpoints.Authorization
     public class AuthorizationController : BaseController
     {
         private readonly IConfiguration _config;
-        private readonly IRoomService _roomStoreService;
+        private readonly IRoomService _roomService;
         private readonly LiveKitService _liveKitService;
 
         public AuthorizationController(IConfiguration config,
@@ -25,7 +25,7 @@ namespace Together.Endpoints.Authorization
             LiveKitService liveKitService)
         {
             _config = config;
-            _roomStoreService = roomStoreService;
+            _roomService = roomStoreService;
             _liveKitService = liveKitService;
         }
 
@@ -70,7 +70,7 @@ namespace Together.Endpoints.Authorization
         public async Task<IActionResult> GetLiveKitToken([FromBody] GetLiveKitTokenRequest request,
             CancellationToken ct = default)
         {
-            var result = await _roomStoreService.ValidatePasswordAsync(request.RoomName, request.Password, ct);
+            var result = await _roomService.ValidatePasswordAsync(request.RoomName, request.Password, ct);
             if(!result)
             {
                 return Unauthorized("Неверный пароль от комнаты");

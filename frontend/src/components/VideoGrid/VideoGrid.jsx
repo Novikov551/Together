@@ -42,6 +42,22 @@ export default function VideoGrid({ participants, localIdentity, speakers, conne
   }
 
   // Режим фокуса: большой тайл + sidebar
+  // Если focused участник отключился — показываем обычную сетку
+  if (!focusedParticipant) {
+    const count = participants.length
+    const gridClass = count <= 1 ? 'grid-1' : count <= 2 ? 'grid-2' : count <= 3 ? 'grid-3' : 'grid-4'
+    return (
+      <div className={`video-grid ${gridClass}`}>
+        {participants.map(p => (
+          <VideoTile key={p.identity} participant={p} isLocal={p.isLocal}
+            isSpeaking={speakers.includes(p.identity)} quality={connectionQuality[p.identity]}
+            ping={p.local ? pings.local : null} globalVolume={globalVolume} isMuted={isMuted}
+            avatar={p.isLocal ? localAvatar : null} onClick={() => handleTileClick(p.identity)} isFocused={false} />
+        ))}
+      </div>
+    )
+  }
+
   return (
     <div className="video-grid focused-layout">
       <div className="focused-main">

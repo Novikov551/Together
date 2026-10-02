@@ -1,4 +1,4 @@
-using Livekit.Server.Sdk.Dotnet;
+﻿using Livekit.Server.Sdk.Dotnet;
 using Microsoft.Extensions.Options;
 using Together.Integrations.Config;
 
@@ -12,6 +12,12 @@ namespace Together.Integrations
         public LiveKitService(IOptions<LiveKitConfig> options)
         {
             _config = options.Value;
+
+            if (!Uri.TryCreate(_config.HttpUrl, UriKind.Absolute, out _))
+            {
+                throw new ArgumentException($"LiveKit HttpUrl невалидный: '{_config.HttpUrl}'");
+            }
+
             _roomServiceClient = new RoomServiceClient(_config.HttpUrl,
                 _config.ApiKey,
                 _config.ApiSecret);
