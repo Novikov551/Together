@@ -206,17 +206,6 @@ export default function DeviceSettings({ mics, cameras, speakers, selectedMic, s
             </select>
           </div>
 
-          {/* Качество камеры */}
-          <div className="settings-divider" />
-          <h4>Качество камеры</h4>
-          <div className="settings-field">
-            <select value={cameraQuality} onChange={e => onCameraQualityChange(e.target.value)}>
-              <option value="low">Низкое (360p)</option>
-              <option value="medium">Среднее (720p)</option>
-              <option value="high">Высокое (1080p)</option>
-            </select>
-          </div>
-
           {/* Профили ввода */}
           <div className="settings-divider" />
           <h4>Профиль ввода</h4>

@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import DeviceSettings from './DeviceSettings'
 import ScreenSharePanel from './ScreenSharePanel'
+import CameraPanel from './CameraPanel'
 
 // SVG иконки для кнопок управления
 const MicIcon = ({ on }) => on ? (
@@ -92,6 +93,7 @@ export default function Controls({
   settings, updateSetting,
 }) {
   const [showScreenPanel, setShowScreenPanel] = useState(false)
+  const [showCamPanel, setShowCamPanel] = useState(false)
 
   return (
     <div className="controls-bar">
@@ -99,10 +101,21 @@ export default function Controls({
         <MicIcon on={isMicOn} />
         <span className="tooltip">Микрофон</span>
       </button>
-      <button className={`ctrl-btn ${isCamOn ? 'on' : 'off'}`} onClick={onToggleCam}>
-        <CameraIcon on={isCamOn} />
-        <span className="tooltip">Камера</span>
-      </button>
+      <div style={{ position: 'relative' }}>
+        <button className={`ctrl-btn ${isCamOn ? 'on' : 'off'}`} onClick={() => setShowCamPanel(true)}>
+          <CameraIcon on={isCamOn} />
+          <span className="tooltip">Камера</span>
+        </button>
+        {showCamPanel && (
+          <CameraPanel
+            cameraQuality={cameraQuality}
+            onCameraQualityChange={onCameraQualityChange}
+            isCamOn={isCamOn}
+            onToggleCam={onToggleCam}
+            onClose={() => setShowCamPanel(false)}
+          />
+        )}
+      </div>
 
       <div style={{ position: 'relative' }}>
         <button className={`ctrl-btn ${isScreenSharing ? 'off' : 'on'}`} onClick={() => setShowScreenPanel(true)}>
@@ -141,7 +154,6 @@ export default function Controls({
         selectedMic={selectedMic} selectedCamera={selectedCamera} selectedSpeaker={selectedSpeaker}
         onMicChange={onMicChange} onCameraChange={onCameraChange} onSpeakerChange={onSpeakerChange}
         onAudioSettingsChange={onAudioSettingsChange}
-        cameraQuality={cameraQuality} onCameraQualityChange={onCameraQualityChange}
         settings={settings} updateSetting={updateSetting}
       />
 
