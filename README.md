@@ -61,20 +61,6 @@
 | Прокси | Nginx (SSL termination, reverse proxy) |
 | Развёртывание | Docker, Docker Compose |
 
-## Локальный запуск
-
-```bash
-# Клонировать репозиторий
-git clone https://github.com/Novikov551/Together.git
-cd Together
-
-# Создать файлы с секретами (см. ниже)
-# Запустить
-docker compose up --build
-```
-
-Приложение будет доступно на `http://localhost:3000`.
-
 ## Настройка секретов
 
 Перед запуском нужно создать два файла с секретами:
@@ -119,55 +105,3 @@ docker compose -f docker-compose.server.yml up -d
 ```
 
 Для HTTPS нужно получить SSL-сертификаты (например, через Let's Encrypt) и указать пути в `docker-compose.server.yml`.
-
-## Структура проекта
-
-```
-Together/
-├── backend/
-│   ├── Dockerfile
-│   ├── Together.sln
-│   └── Together/
-│       ├── Program.cs
-│       ├── AdminProfile.cs
-│       ├── Endpoints/
-│       │   └── Authorization/
-│       │       ├── AuthorizationController.cs
-│       │       └── Models/
-│       ├── Extensions/
-│       │   ├── WebApplicationBuilderExtensions.cs
-│       │   ├── WebApplicationExtensions.cs
-│       │   └── ServiceCollectionExtensions.cs
-│       ├── Logging/
-│       └── appsettings.json
-├── frontend/
-│   ├── Dockerfile
-│   ├── nginx.conf
-│   ├── src/
-│   │   ├── App.jsx
-│   │   ├── components/
-│   │   │   ├── Login/
-│   │   │   ├── Lobby/
-│   │   │   ├── Call/
-│   │   │   ├── VideoGrid/
-│   │   │   ├── Controls/
-│   │   │   ├── Chat/
-│   │   │   ├── MicTest/
-│   │   │   └── Toast/
-│   │   ├── hooks/
-│   │   │   ├── useRoom.js
-│   │   │   ├── useDevices.js
-│   │   │   └── useSettings.js
-│   │   └── services/
-│   │       ├── api.js
-│   │       └── sounds.js
-│   └── index.html
-├── livekit/
-│   ├── livekit.yaml.example
-│   └── livekit.yaml          ← не в git
-├── docker-compose.yml         ← локальная разработка
-├── docker-compose.server.yml  ← продакшен
-├── deploy.sh
-├── architecture.html
-└── README.md
-```
