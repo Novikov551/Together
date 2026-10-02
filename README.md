@@ -1,107 +1,107 @@
 # Together
 
-Групповые видеозвонки с демонстрацией экрана, чатом и настройками устройств.
+Group video calls with screen sharing, chat, and device settings.
 
-## Архитектура
+## Architecture
 
-![Архитектура](./architecture.png)
+![Architecture](./architecture.png)
 
-### Как работает подключение
+### How the connection works
 
 ```
-Пользователь (Браузер)
+User (Browser)
        │
-       │  1. HTTPS: логин/пароль
+       │  1. HTTPS: login/password
        ▼
     Nginx (SSL, reverse proxy)
        │
-       ├──→ Frontend (React SPA) — отдаёт статику
+       ├──→ Frontend (React SPA) — serves static files
        │
        ├──→ Backend (.NET API)
        │       │
-       │       │  2. Проверяет логин/пароль
-       │       │  3. Возвращает JWT сессионный токен
+       │       │  2. Validates login/password
+       │       │  3. Returns JWT session token
        │       │
-       │       │  4. Принимает JWT + имя + комнату
-       │       │  5. Генерирует LiveKit Access Token
+       │       │  4. Accepts JWT + display name + room
+       │       │  5. Generates LiveKit Access Token
        │       ▼
        │    LiveKit Server (WebRTC SFU)
        │       │
-       │       │  6. WebSocket: подключение к комнате
-       │       │  7. WebRTC: видео, аудио, экран
-       │       │  8. Data Channel: текстовый чат
+       │       │  6. WebSocket: join room
+       │       │  7. WebRTC: video, audio, screen
+       │       │  8. Data Channel: text chat
        │       ▼
-       └──→ /rtc → LiveKit (проксирует WebSocket)
+       └──→ /rtc → LiveKit (proxies WebSocket)
 ```
 
-### Компоненты
+### Components
 
-**Frontend** — React + Vite SPA с тремя экранами:
-- **Login** — ввод логина и пароля, получение JWT-токена
-- **Lobby** — выбор имени, комнаты, аватара, настройка микрофона/камеры/динамиков, тест микрофона
-- **Call** — видеозвонок: сетка участников, управление микрофоном/камерой/экраном, чат, настройки качества
+**Frontend** — React + Vite SPA with three screens:
+- **Login** — enter login and password, get JWT token
+- **Lobby** — choose name, room, avatar, configure microphone/camera/speakers, test microphone
+- **Call** — video call: participant grid, mic/camera/screen controls, chat, quality settings
 
 **Backend** — ASP.NET Core 9:
-- `POST /api/authorization/login` — аутентификация, возвращает JWT
-- `POST /api/authorization/token` — генерация LiveKit Access Token (требует JWT)
-- JWT-аутентификация, Swagger, Serilog, Health Checks
+- `POST /api/authorization/login` — authentication, returns JWT
+- `POST /api/authorization/token` — generates LiveKit Access Token (requires JWT)
+- JWT authentication, Swagger, Serilog, Health Checks
 
 **LiveKit** — Open-source WebRTC SFU (Selective Forwarding Unit):
-- Не перекодирует медиа, а пересылает между участниками
-- Адаптивный битрейт, simulcast (несколько слоёв качества)
-- Комнаты, управление участниками, Data Channel для чата
+- Does not transcode media, forwards between participants
+- Adaptive bitrate, simulcast (multiple quality layers)
+- Rooms, participant management, Data Channel for chat
 
-### Стек
+### Stack
 
-| Слой | Технологии |
-|------|-----------|
+| Layer | Technologies |
+|-------|-------------|
 | Frontend | React, Vite, livekit-client |
 | Backend | .NET 9, ASP.NET Core, JWT, Serilog |
-| Медиа | LiveKit Server (WebRTC SFU) |
-| Прокси | Nginx (SSL termination, reverse proxy) |
-| Развёртывание | Docker, Docker Compose |
+| Media | LiveKit Server (WebRTC SFU) |
+| Proxy | Nginx (SSL termination, reverse proxy) |
+| Deployment | Docker, Docker Compose |
 
-## Настройка секретов
+## Secrets Configuration
 
-Перед запуском нужно создать два файла с секретами:
+Before running, create two files with secrets:
 
 ### 1. `backend/Together/appsettings.Development.json`
 
 ```json
 {
   "LiveKit": {
-    "ApiKey": "ваш-api-key",
-    "ApiSecret": "ваш-api-secret"
+    "ApiKey": "your-api-key",
+    "ApiSecret": "your-api-secret"
   },
   "Jwt": {
-    "Secret": "секрет-минимум-32-символа"
+    "Secret": "your-secret-at-least-32-chars"
   },
   "AdminProfile": {
-    "user_name": "логин",
-    "password": "пароль"
+    "user_name": "username",
+    "password": "password"
   }
 }
 ```
 
 ### 2. `livekit/livekit.yaml`
 
-Скопируйте `livekit/livekit.yaml.example` и заполните реальными значениями:
+Copy `livekit/livekit.yaml.example` and fill in real values:
 
 ```yaml
 keys:
-  ваш-api-key: ваш-api-secret
+  your-api-key: your-api-secret
 ```
 
-## Развёртывание на сервере
+## Server Deployment
 
 ```bash
-# Собрать и запушить образы
+# Build and push images
 ./deploy.sh
 
-# На сервере:
+# On the server:
 cd /opt/together
 docker compose -f docker-compose.server.yml pull
 docker compose -f docker-compose.server.yml up -d
 ```
 
-Для HTTPS нужно получить SSL-сертификаты (например, через Let's Encrypt) и указать пути в `docker-compose.server.yml`.
+For HTTPS you need SSL certificates (e.g. via Let's Encrypt) and set the paths in `docker-compose.server.yml`.
