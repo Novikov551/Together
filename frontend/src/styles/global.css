@@ -991,6 +991,7 @@ body {
 }
 .lobby-main { flex: 1; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .lobby-card { width: 100%; max-width: 380px; }
+.field-row { padding: 4px 0; }
 
 /* ==================== PASSWORD MODAL ==================== */
 .modal-overlay {

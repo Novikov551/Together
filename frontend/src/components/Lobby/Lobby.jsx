@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react'
-import { getLiveKitToken } from '../../services/api'
+import { getLiveKitToken, createRoom } from '../../services/api'
 import { useDevices } from '../../hooks/useDevices'
 import MicTest from '../MicTest/MicTest'
 import RoomList from './RoomList'
-import PasswordModal from './PasswordModal'
+import JoinModal from './JoinModal'
 
 const AVATARS = ['😀', '😎', '🤓', '😇', '🥳', '🦊', '🐱', '🐶', '🦁', '🐻', '🐼', '🐨', '🎮', '🎵', '🚀', '⭐', '🔥', '💎', '🎯', '🌈']
 
@@ -14,7 +14,9 @@ export default function Lobby({ sessionToken, onJoin, showToast, settings, updat
   const [loading, setLoading] = useState(false)
   const [tab, setTab] = useState('join')
   const [showAvatarPicker, setShowAvatarPicker] = useState(false)
-  const [passwordModal, setPasswordModal] = useState(null)
+  const [isPrivate, setIsPrivate] = useState(false)
+  const [roomPassword, setRoomPassword] = useState('')
+  const [joinModal, setJoinModal] = useState(null)
   const { mics, cameras, speakers, selectedMic, selectedCamera, selectedSpeaker, setSelectedMic, setSelectedCamera, setSelectedSpeaker } = useDevices()
 
   useEffect(() => {
@@ -36,22 +38,18 @@ export default function Lobby({ sessionToken, onJoin, showToast, settings, updat
   useEffect(() => { if (selectedCamera) updateSetting('selectedCamera', selectedCamera) }, [selectedCamera, updateSetting])
   useEffect(() => { if (selectedSpeaker) updateSetting('selectedSpeaker', selectedSpeaker) }, [selectedSpeaker, updateSetting])
 
-  const doJoin = useCallback(async (roomName, password) => {
-    if (!name.trim()) {
-      setError('Введите имя')
-      return
-    }
+  const doJoin = useCallback(async (displayName, roomName, password) => {
     setError('')
     setLoading(true)
-    updateSettings({ displayName: name.trim(), roomName })
+    updateSettings({ displayName, roomName })
     try {
-      const data = await getLiveKitToken(sessionToken, name.trim(), roomName, password)
+      const data = await getLiveKitToken(sessionToken, displayName, roomName, password)
       const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
       const liveKitUrl = protocol + '//' + window.location.host
       window.__together = {
         wsUrl: liveKitUrl,
         token: data.live_kit_token,
-        displayName: name.trim(),
+        displayName,
         roomName,
         micDeviceId: selectedMic,
         cameraDeviceId: selectedCamera,
@@ -64,34 +62,35 @@ export default function Lobby({ sessionToken, onJoin, showToast, settings, updat
     } finally {
       setLoading(false)
     }
-  }, [name, sessionToken, selectedMic, selectedCamera, selectedSpeaker, settings.avatar, updateSettings, onJoin])
+  }, [sessionToken, selectedMic, selectedCamera, selectedSpeaker, settings.avatar, updateSettings, onJoin])
 
+  // Вход по кнопке "Подключиться" (центральная карточка)
   const handleJoin = async (e) => {
     e.preventDefault()
     if (!name.trim() || !room.trim()) {
       setError('Заполните имя и комнату')
       return
     }
-    await doJoin(room.trim(), null)
+    // Создаём комнату если нужно
+    try {
+      await createRoom(sessionToken, room.trim(), isPrivate ? roomPassword : null)
+    } catch {
+      // Комната уже существует — ок
+    }
+    await doJoin(name.trim(), room.trim(), null)
   }
 
-  const handleJoinRoom = useCallback((roomName, isPrivate) => {
-    if (!name.trim()) {
-      setError('Введите имя')
-      return
-    }
-    if (isPrivate) {
-      setPasswordModal(roomName)
-    } else {
-      doJoin(roomName, null)
-    }
-  }, [name, doJoin])
+  // Клик "Подключиться" из списка комнат
+  const handleJoinRoom = useCallback((roomName, roomIsPrivate) => {
+    setJoinModal({ roomName, isPrivate: roomIsPrivate })
+  }, [])
 
-  const handlePasswordConfirm = useCallback((password) => {
-    const roomName = passwordModal
-    setPasswordModal(null)
-    doJoin(roomName, password)
-  }, [passwordModal, doJoin])
+  // Подтверждение из модалки
+  const handleJoinConfirm = useCallback((displayName, password) => {
+    const { roomName } = joinModal
+    setJoinModal(null)
+    doJoin(displayName, roomName, password)
+  }, [joinModal, doJoin])
 
   return (
     <div className="screen lobby-screen">
@@ -100,7 +99,7 @@ export default function Lobby({ sessionToken, onJoin, showToast, settings, updat
         <RoomList sessionToken={sessionToken} onJoinRoom={handleJoinRoom} />
       </div>
 
-      {/* Справа — основной контент */}
+      {/* Справа — вход / настройки */}
       <div className="lobby-main">
         <div className="card lobby-card">
           <div className="lobby-tabs">
@@ -132,6 +131,20 @@ export default function Lobby({ sessionToken, onJoin, showToast, settings, updat
                 <label>Комната</label>
                 <input type="text" value={room} onChange={e => setRoom(e.target.value)} placeholder="Например, family-call" />
               </div>
+
+              {/* Переключатель приватная/публичная */}
+              <div className="field-row">
+                <label className="toggle-row compact">
+                  <span>Приватная комната</span>
+                  <input type="checkbox" checked={isPrivate} onChange={e => setIsPrivate(e.target.checked)} />
+                </label>
+              </div>
+              {isPrivate && (
+                <div className="field">
+                  <label>Пароль комнаты</label>
+                  <input type="password" value={roomPassword} onChange={e => setRoomPassword(e.target.value)} placeholder="Пароль" />
+                </div>
+              )}
 
               <button className="btn-primary" type="submit" disabled={loading}>
                 {loading ? 'Подключение...' : 'Подключиться'}
@@ -172,8 +185,14 @@ export default function Lobby({ sessionToken, onJoin, showToast, settings, updat
         </div>
       </div>
 
-      {passwordModal && (
-        <PasswordModal roomName={passwordModal} onConfirm={handlePasswordConfirm} onCancel={() => setPasswordModal(null)} />
+      {joinModal && (
+        <JoinModal
+          roomName={joinModal.roomName}
+          isPrivate={joinModal.isPrivate}
+          defaultName={name}
+          onConfirm={handleJoinConfirm}
+          onCancel={() => setJoinModal(null)}
+        />
       )}
     </div>
   )
