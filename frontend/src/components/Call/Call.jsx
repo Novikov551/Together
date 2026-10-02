@@ -17,7 +17,7 @@ export default function Call({ onLeave, showToast, settings, updateSetting, upda
     screenQuality, setScreenQuality,
     cameraQuality, setCameraQuality,
     connect, disconnect, toggleMic, toggleCam, toggleScreen,
-    switchDevice,
+    switchDevice, applyAudioSettings,
   } = useRoom()
 
   const {
@@ -106,8 +106,12 @@ export default function Call({ onLeave, showToast, settings, updateSetting, upda
   }, [setSelectedSpeaker])
 
   const handleAudioSettingsChange = useCallback((settings) => {
-    console.log('Audio settings changed:', settings)
-  }, [])
+    applyAudioSettings({
+      noiseSuppression: settings.noiseSuppression,
+      echoCancellation: settings.echoCancellation,
+      autoGainControl: false,
+    })
+  }, [applyAudioSettings])
 
   const handleToggleMute = useCallback(() => {
     setIsMuted(prev => !prev)

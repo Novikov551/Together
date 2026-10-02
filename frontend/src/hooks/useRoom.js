@@ -355,6 +355,24 @@ export function useRoom() {
     }
   }, [updateParticipants])
 
+  // Применить настройки аудио к живому микрофону
+  const applyAudioSettings = useCallback(async ({ noiseSuppression, echoCancellation, autoGainControl }) => {
+    if (!roomRef.current || !isMicOn) return
+    try {
+      const pub = roomRef.current.localParticipant.getTrackPublication('microphone')
+      if (pub && pub.track) {
+        await pub.track.setProcessor(null)
+        await pub.track.restartTrack({
+          noiseSuppression: noiseSuppression ?? true,
+          echoCancellation: echoCancellation ?? true,
+          autoGainControl: autoGainControl ?? false,
+        })
+      }
+    } catch (e) {
+      console.warn('Не удалось применить настройки аудио:', e)
+    }
+  }, [isMicOn])
+
   useEffect(() => {
     return () => {
       if (roomRef.current) {
@@ -391,6 +409,7 @@ export function useRoom() {
     toggleCam,
     toggleScreen,
     switchDevice,
+    applyAudioSettings,
   }
 }
 

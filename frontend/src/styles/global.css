@@ -676,15 +676,47 @@ body {
 }
 
 /* ==================== FULLSCREEN ==================== */
-.video-tile.fullscreen-tile {
-  border-radius: 0; aspect-ratio: unset;
-  width: 100vw; height: 100vh;
+/* ==================== FOCUSED LAYOUT (Discord-style) ==================== */
+.video-grid.focused-layout {
+  display: flex; flex-direction: row; gap: 6px; padding: 6px;
+  overflow: hidden; height: 100%;
 }
-.video-tile.fullscreen-tile video {
+.focused-main {
+  flex: 1; min-width: 0; display: flex;
+  align-items: center; justify-content: center;
+}
+.focused-main .video-tile {
+  width: 100%; height: 100%;
+  aspect-ratio: unset; cursor: pointer;
+}
+.focused-main .video-tile video {
   object-fit: contain;
 }
-.video-tile.fullscreen-tile .tile-controls {
-  opacity: 1;
+.focused-sidebar {
+  display: flex; flex-direction: column; gap: 4px;
+  width: 220px; min-width: 180px;
+  overflow-y: auto; overflow-x: hidden;
+  padding: 2px;
+}
+.focused-sidebar .sidebar-tile {
+  aspect-ratio: 16 / 9; min-height: 60px;
+  cursor: pointer; flex-shrink: 0;
+  transition: outline 0.15s;
+}
+.focused-sidebar .sidebar-tile:hover {
+  outline: 2px solid var(--accent);
+}
+.focused-sidebar .sidebar-tile .tile-name {
+  font-size: 0.7rem; padding: 2px 6px; bottom: 4px; left: 4px;
+}
+.focused-sidebar .sidebar-tile .avatar {
+  width: 40px; height: 40px; font-size: 1rem;
+}
+.video-tile.focused {
+  cursor: pointer;
+}
+.video-tile:not(.focused):not(.sidebar-tile) {
+  cursor: pointer;
 }
 
 /* ==================== SCREEN SHARE BADGE ==================== */

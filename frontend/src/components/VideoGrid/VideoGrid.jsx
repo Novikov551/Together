@@ -2,30 +2,86 @@ import { useEffect, useRef, useState, useCallback } from 'react'
 import { Track } from 'livekit-client'
 
 export default function VideoGrid({ participants, localIdentity, speakers, connectionQuality, pings, globalVolume, isMuted, localAvatar }) {
-  const count = participants.length
-  const gridClass = count <= 1 ? 'grid-1' : count <= 2 ? 'grid-2' : count <= 3 ? 'grid-3' : 'grid-4'
+  const [focusedIdentity, setFocusedIdentity] = useState(null)
 
+  const handleTileClick = useCallback((identity) => {
+    setFocusedIdentity(prev => prev === identity ? null : identity)
+  }, [])
+
+  const focusedParticipant = focusedIdentity
+    ? participants.find(p => p.identity === focusedIdentity)
+    : null
+
+  const sidebarParticipants = focusedIdentity
+    ? participants.filter(p => p.identity !== focusedIdentity)
+    : []
+
+  // Обычная сетка (нет фокуса)
+  if (!focusedIdentity) {
+    const count = participants.length
+    const gridClass = count <= 1 ? 'grid-1' : count <= 2 ? 'grid-2' : count <= 3 ? 'grid-3' : 'grid-4'
+    return (
+      <div className={`video-grid ${gridClass}`}>
+        {participants.map(p => (
+          <VideoTile
+            key={p.identity}
+            participant={p}
+            isLocal={p.isLocal}
+            isSpeaking={speakers.includes(p.identity)}
+            quality={connectionQuality[p.identity]}
+            ping={p.local ? pings.local : null}
+            globalVolume={globalVolume}
+            isMuted={isMuted}
+            avatar={p.isLocal ? localAvatar : null}
+            onClick={() => handleTileClick(p.identity)}
+            isFocused={false}
+          />
+        ))}
+      </div>
+    )
+  }
+
+  // Режим фокуса: большой тайл + sidebar
   return (
-    <div className={`video-grid ${gridClass}`}>
-      {participants.map(p => (
+    <div className="video-grid focused-layout">
+      <div className="focused-main">
         <VideoTile
-          key={p.identity}
-          participant={p}
-          isLocal={p.isLocal}
-          isSpeaking={speakers.includes(p.identity)}
-          quality={connectionQuality[p.identity]}
-          ping={p.local ? pings.local : null}
+          key={focusedParticipant.identity}
+          participant={focusedParticipant}
+          isLocal={focusedParticipant.isLocal}
+          isSpeaking={speakers.includes(focusedParticipant.identity)}
+          quality={connectionQuality[focusedParticipant.identity]}
+          ping={focusedParticipant.local ? pings.local : null}
           globalVolume={globalVolume}
           isMuted={isMuted}
-          avatar={p.isLocal ? localAvatar : null}
+          avatar={focusedParticipant.isLocal ? localAvatar : null}
+          onClick={() => handleTileClick(focusedParticipant.identity)}
+          isFocused={true}
         />
-      ))}
+      </div>
+      <div className="focused-sidebar">
+        {sidebarParticipants.map(p => (
+          <VideoTile
+            key={p.identity}
+            participant={p}
+            isLocal={p.isLocal}
+            isSpeaking={speakers.includes(p.identity)}
+            quality={connectionQuality[p.identity]}
+            ping={p.local ? pings.local : null}
+            globalVolume={globalVolume}
+            isMuted={isMuted}
+            avatar={p.isLocal ? localAvatar : null}
+            onClick={() => handleTileClick(p.identity)}
+            isFocused={false}
+            isSidebar={true}
+          />
+        ))}
+      </div>
     </div>
   )
 }
 
 function QualityIndicator({ quality, ping }) {
-  // ConnectionQuality: 0 = Unknown, 1 = Poor, 2 = Good, 3 = Excellent
   const q = quality != null && quality > 0 ? quality : 3
   const level = Math.min(q, 3) - 1
   const colors = ['#ef4444', '#f59e0b', '#22c55e']
@@ -50,7 +106,7 @@ function QualityIndicator({ quality, ping }) {
   )
 }
 
-function VideoTile({ participant, isLocal, isSpeaking, quality, ping, globalVolume, isMuted, avatar }) {
+function VideoTile({ participant, isLocal, isSpeaking, quality, ping, globalVolume, isMuted, avatar, onClick, isFocused, isSidebar }) {
   const videoRef = useRef(null)
   const audioRef = useRef(null)
   const screenAudioRef = useRef(null)
@@ -98,14 +154,14 @@ function VideoTile({ participant, isLocal, isSpeaking, quality, ping, globalVolu
     }
   }, [screenShareAudioTrack, isLocal])
 
-  // Apply volume to mic audio (muted by global mute button)
+  // Apply volume to mic audio
   useEffect(() => {
     if (!audioRef.current || isLocal) return
     const effectiveVolume = (isMuted || tileMuted) ? 0 : (volume / 100) * (globalVolume / 100)
     audioRef.current.volume = Math.max(0, Math.min(1, effectiveVolume))
   }, [volume, globalVolume, tileMuted, isMuted, isLocal])
 
-  // Apply volume to screen share audio (NOT affected by global mute)
+  // Apply volume to screen share audio
   useEffect(() => {
     if (!screenAudioRef.current || isLocal) return
     const effectiveVolume = screenMuted ? 0 : (screenVolume / 100) * (globalVolume / 100)
@@ -169,8 +225,9 @@ function VideoTile({ participant, isLocal, isSpeaking, quality, ping, globalVolu
   return (
     <div
       ref={tileRef}
-      className={`video-tile ${isSpeaking ? 'speaking' : ''} ${!hasVideo ? 'no-video' : ''} ${isScreenShare ? 'screen-share' : ''}`}
+      className={`video-tile ${isSpeaking ? 'speaking' : ''} ${!hasVideo ? 'no-video' : ''} ${isScreenShare ? 'screen-share' : ''} ${isFocused ? 'focused' : ''} ${isSidebar ? 'sidebar-tile' : ''}`}
       onContextMenu={handleContextMenu}
+      onClick={onClick}
     >
       <div className="speaking-ring" />
       {!hasVideo && (
@@ -185,7 +242,7 @@ function VideoTile({ participant, isLocal, isSpeaking, quality, ping, globalVolu
       {/* Tile controls overlay */}
       <div className="tile-controls">
         {isScreenShare && (
-          <button className="tile-ctrl-btn" onClick={handlePiP} title={isPiP ? 'Вернуть из PiP' : 'Вынести в отдельное окно'}>
+          <button className="tile-ctrl-btn" onClick={(e) => { e.stopPropagation(); handlePiP(); }} title={isPiP ? 'Вернуть из PiP' : 'Вынести в отдельное окно'}>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <rect x="2" y="3" width="20" height="14" rx="2" ry="2"/>
               <rect x="12" y="9" width="8" height="6" rx="1" fill="currentColor" opacity="0.3"/>
@@ -193,7 +250,7 @@ function VideoTile({ participant, isLocal, isSpeaking, quality, ping, globalVolu
           </button>
         )}
         {!isLocal && (
-          <button className={`tile-ctrl-btn ${tileMuted ? 'muted' : ''}`} onClick={toggleTileMute} title={tileMuted ? 'Включить звук' : 'Выключить звук'}>
+          <button className={`tile-ctrl-btn ${tileMuted ? 'muted' : ''}`} onClick={(e) => { e.stopPropagation(); toggleTileMute(); }} title={tileMuted ? 'Включить звук' : 'Выключить звук'}>
             {tileMuted ? (
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
