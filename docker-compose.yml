@@ -1,0 +1,36 @@
+services:
+  livekit:
+    image: livekit/livekit-server
+    container_name: livekit-server
+    restart: unless-stopped
+    network_mode: host
+    volumes:
+      - ./livekit/livekit.yaml:/livekit.yaml
+    command: --config /livekit.yaml
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: novikov551/together-backend:latest
+    container_name: together-backend
+    restart: unless-stopped
+    ports:
+      - "5163:5163"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - LiveKit__WebSocketUrl=ws://localhost:7880
+    depends_on:
+      - livekit
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: novikov551/together-frontend:latest
+    container_name: together-frontend
+    restart: unless-stopped
+    ports:
+      - "3000:80"
+    depends_on:
+      - backend
