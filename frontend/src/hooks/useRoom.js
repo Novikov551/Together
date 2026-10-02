@@ -373,7 +373,7 @@ export function useRoom() {
 function getTracks(participant) {
   const tracks = {}
   participant.trackPublications.forEach(pub => {
-    if (pub.isSubscribed && pub.track) {
+    if (pub.isSubscribed && pub.track && !pub.isMuted) {
       tracks[pub.source] = pub.track
     }
   })
