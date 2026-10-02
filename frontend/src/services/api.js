@@ -48,7 +48,7 @@ export async function createRoom(sessionToken, name, password) {
   const body = { name }
   if (password) body.password = password
 
-  const res = await fetch(`${ROOMS_BASE}/create`, {
+  const res = await fetch(`${ROOMS_BASE}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
