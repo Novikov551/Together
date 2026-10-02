@@ -65,6 +65,9 @@ namespace Together.Logic.Rooms
 
         public async Task DeleteRoomAsync(string roomName, CancellationToken ct = default)
         {
+            var participants = await _liveKitService.GetRoomParticipantsAsync(roomName, ct);
+            if (participants.Count > 0) return;
+
             await _liveKitService.DeleteRoomAsync(roomName, ct);
             _rooms.TryRemove(roomName, out _);
         }
