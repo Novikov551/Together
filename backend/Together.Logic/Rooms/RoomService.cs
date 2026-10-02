@@ -26,8 +26,11 @@ namespace Together.Logic.Rooms
 
         public async Task CreateRoomAsync(string roomName, string? pass, CancellationToken ct = default)
         {
-            var room = await _liveKitService.CreateRoomAsync(roomName, ct);
-            await SetPasswordAsync(roomName, pass, ct);
+            await _liveKitService.CreateRoomAsync(roomName, ct);
+            if (!_rooms.ContainsKey(roomName))
+            {
+                await SetPasswordAsync(roomName, pass, ct);
+            }
         }
 
         public Task<bool> ValidatePasswordAsync(string roomName, string? pass, CancellationToken ct = default)
