@@ -1,4 +1,4 @@
-﻿using Livekit.Server.Sdk.Dotnet;
+using Livekit.Server.Sdk.Dotnet;
 using Microsoft.Extensions.Options;
 using Together.Integrations.Config;
 
@@ -64,6 +64,12 @@ namespace Together.Integrations
             return response.Name;
         }
 
+
+        public async Task DeleteRoomAsync(string roomName, CancellationToken ct = default)
+        {
+            ct.ThrowIfCancellationRequested();
+            await _roomServiceClient.DeleteRoom(new DeleteRoomRequest { Room = roomName });
+        }
 
         public Task<string> GenerateTokenAsync(string displayName, string room, CancellationToken ct = default)
         {

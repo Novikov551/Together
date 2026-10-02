@@ -2,11 +2,12 @@ import { useEffect, useState, useRef, useCallback } from 'react'
 import { useRoom } from '../../hooks/useRoom'
 import { useDevices } from '../../hooks/useDevices'
 import { playLeaveCall } from '../../services/sounds'
+import { deleteRoom } from '../../services/api'
 import VideoGrid from '../VideoGrid/VideoGrid'
 import Controls from '../Controls/Controls'
 import ChatPanel from '../Chat/ChatPanel'
 
-export default function Call({ onLeave, showToast, settings, updateSetting, updateSettings }) {
+export default function Call({ sessionToken, onLeave, showToast, settings, updateSetting, updateSettings }) {
   const {
     participants, localIdentity, isConnected,
     isMicOn, isCamOn, isScreenSharing, speakers,
@@ -85,6 +86,9 @@ export default function Call({ onLeave, showToast, settings, updateSetting, upda
     playLeaveCall()
     disconnect()
     if (timerRef.current) clearInterval(timerRef.current)
+    if (sessionToken && roomName) {
+      deleteRoom(sessionToken, roomName).catch(() => {})
+    }
     onLeave()
   }
 

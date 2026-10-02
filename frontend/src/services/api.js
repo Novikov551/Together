@@ -59,3 +59,11 @@ export async function createRoom(sessionToken, name, password) {
   if (!res.ok) throw new Error('Не удалось создать комнату')
   return res.json()
 }
+export async function deleteRoom(sessionToken, roomName) {
+  const res = await fetch(`${ROOMS_BASE}/${encodeURIComponent(roomName)}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${sessionToken}` },
+  })
+  if (!res.ok) throw new Error('Не удалось удалить комнату')
+  return res.json()
+}

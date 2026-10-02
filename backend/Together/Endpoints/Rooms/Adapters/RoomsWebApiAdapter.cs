@@ -1,4 +1,4 @@
-﻿using Together.Endpoints.Rooms.Converters;
+using Together.Endpoints.Rooms.Converters;
 using Together.Endpoints.Rooms.Models.Requests;
 using Together.Endpoints.Rooms.Models.Responses;
 using Together.Logic.Rooms;
@@ -24,6 +24,11 @@ namespace Together.Endpoints.Rooms.Adapters
         internal async Task CreateRoomAsync(CreateRoomRequest request, CancellationToken ct = default)
         {
             await _roomsService.CreateRoomAsync(request.Name, request.Password, ct);
+        }
+
+        internal async Task DeleteRoomAsync(string room, CancellationToken ct = default)
+        {
+            await _roomsService.DeleteRoomAsync(room, ct);
         }
 
         internal async Task<RoomInfoResponse?> GetRoomParticipantsAsync(string room, CancellationToken ct = default)

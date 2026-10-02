@@ -20,17 +20,7 @@ namespace Together.Logic.Rooms
         public async Task<List<RoomShortInfoDto>> GetAllRoomsAsync(CancellationToken ct = default)
         {
             var rooms = await _liveKitService.GetRoomsAsync(ct);
-
-            var result = new List<RoomShortInfoDto>();
-            foreach (var roomName in rooms)
-            {
-                var participants = await _liveKitService.GetRoomParticipantsAsync(roomName, ct);
-                if (participants.Count == 0) continue;
-
-                var isPrivate = IsPrivateRoom(roomName);
-                result.Add(new RoomShortInfoDto(roomName, isPrivate));
-            }
-            return result;
+            return rooms.Select(e => new RoomShortInfoDto(e, IsPrivateRoom(e))).ToList();
         }
 
         public async Task CreateRoomAsync(string roomName, string? pass, CancellationToken ct = default)
@@ -71,6 +61,12 @@ namespace Together.Logic.Rooms
             var isPrivate = IsPrivateRoom(room);
 
             return new RoomInfoDto(room, participants, isPrivate);
+        }
+
+        public async Task DeleteRoomAsync(string roomName, CancellationToken ct = default)
+        {
+            await _liveKitService.DeleteRoomAsync(roomName, ct);
+            _rooms.TryRemove(roomName, out _);
         }
 
         #region Private

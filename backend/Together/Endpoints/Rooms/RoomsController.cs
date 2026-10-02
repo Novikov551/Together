@@ -1,4 +1,4 @@
-﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
 using Together.Endpoints.Rooms.Adapters;
 using Together.Endpoints.Rooms.Models.Requests;
@@ -36,6 +36,17 @@ namespace Together.Endpoints.Rooms
             var roomInfo = await _adapter.GetRoomParticipantsAsync(room, ct);
 
             return Ok(roomInfo);
+        }
+
+        [SwaggerOperation(Summary = "Удаление комнаты")]
+        [HttpDelete("{room}")]
+        [ProducesResponseType(200)]
+        public async Task<IActionResult> DeleteRoomAsync(
+            [FromRoute] string room,
+            CancellationToken ct = default)
+        {
+            await _adapter.DeleteRoomAsync(room, ct);
+            return Ok();
         }
 
         [SwaggerOperation(Summary = "Создание комнаты")]
