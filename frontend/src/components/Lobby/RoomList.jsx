@@ -32,17 +32,14 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
 
   useEffect(() => { loadRooms() }, [loadRooms])
 
-  // Фильтрация по поиску
   const filtered = search.trim()
     ? rooms.filter(r => r.name.toLowerCase().includes(search.toLowerCase()))
     : rooms
 
-  // Пагинация
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const safePage = Math.min(page, totalPages - 1)
   const paged = filtered.slice(safePage * PAGE_SIZE, (safePage + 1) * PAGE_SIZE)
 
-  // Сброс страницы при поиске
   useEffect(() => { setPage(0) }, [search])
 
   const handleRoomClick = useCallback(async (room) => {
@@ -90,18 +87,20 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
       <div className="room-list-header">
         <h3>Комнаты</h3>
         <div className="room-list-actions">
-          <button className="room-refresh-btn" onClick={loadRooms} title="Обновить">🔄</button>
-          <button className="room-create-btn" onClick={() => setShowCreate(!showCreate)}>
-            {showCreate ? '✕' : '+ Создать'}
+          <button className="room-action-btn" onClick={loadRooms} title="Обновить">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
+          </button>
+          <button className="room-action-btn accent" onClick={() => setShowCreate(!showCreate)} title="Создать комнату">
+            {showCreate ? '✕' : '+'}
           </button>
         </div>
       </div>
 
-      {/* Поиск */}
       <div className="room-search">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
         <input
           type="text"
-          placeholder="Поиск комнаты..."
+          placeholder="Поиск..."
           value={search}
           onChange={e => setSearch(e.target.value)}
         />
@@ -111,44 +110,23 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
 
       {showCreate && (
         <form className="room-create-form" onSubmit={handleCreate}>
-          <input
-            type="text"
-            placeholder="Название комнаты"
-            value={newRoomName}
-            onChange={e => setNewRoomName(e.target.value)}
-            autoFocus
-          />
-          <input
-            type="password"
-            placeholder="Пароль (необязательно)"
-            value={newRoomPassword}
-            onChange={e => setNewRoomPassword(e.target.value)}
-          />
-          <button type="submit" disabled={creating || !newRoomName.trim()}>
-            {creating ? '...' : 'Создать'}
-          </button>
+          <input type="text" placeholder="Название" value={newRoomName} onChange={e => setNewRoomName(e.target.value)} autoFocus />
+          <input type="password" placeholder="Пароль (опц.)" value={newRoomPassword} onChange={e => setNewRoomPassword(e.target.value)} />
+          <button type="submit" disabled={creating || !newRoomName.trim()}>{creating ? '...' : 'Создать'}</button>
         </form>
       )}
 
-      {loading && rooms.length === 0 && (
-        <div className="room-list-loading">Загрузка...</div>
-      )}
-
-      {!loading && filtered.length === 0 && (
-        <div className="room-list-empty">{search ? 'Ничего не найдено' : 'Нет активных комнат'}</div>
-      )}
+      {loading && rooms.length === 0 && <div className="room-list-loading">Загрузка...</div>}
+      {!loading && filtered.length === 0 && <div className="room-list-empty">{search ? 'Ничего не найдено' : 'Нет комнат'}</div>}
 
       <div className="room-items">
         {paged.map(room => (
           <div key={room.name} className={`room-item ${selectedRoom?.name === room.name ? 'selected' : ''}`}>
             <div className="room-item-main" onClick={() => handleRoomClick(room)}>
               <div className="room-item-info">
-                <span className="room-item-name">
-                  {room.is_private && '🔒 '}{room.name}
-                </span>
-                {room.is_private && <span className="room-badge-private">Приватная</span>}
+                <span className="room-item-name">{room.is_private && '🔒 '}{room.name}</span>
               </div>
-              <span className="room-item-arrow">{selectedRoom?.name === room.name ? '▼' : '▶'}</span>
+              <span className="room-item-arrow">{selectedRoom?.name === room.name ? '▾' : '▸'}</span>
             </div>
 
             {selectedRoom?.name === room.name && (
@@ -157,15 +135,13 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
                   <div className="room-participants-loading">Загрузка...</div>
                 ) : participants && participants.length > 0 ? (
                   <ul className="room-participants-list">
-                    {participants.map((p, i) => (
-                      <li key={i} className="room-participant">👤 {p}</li>
-                    ))}
+                    {participants.map((p, i) => <li key={i} className="room-participant">👤 {p}</li>)}
                   </ul>
                 ) : (
-                  <div className="room-participants-empty">Нет участников</div>
+                  <div className="room-participants-empty">Пусто</div>
                 )}
                 <button className="room-join-btn" onClick={() => handleJoin(room)}>
-                  Подключиться
+                  {room.is_private ? '🔒 Войти' : 'Войти'}
                 </button>
               </div>
             )}
@@ -173,12 +149,11 @@ export default function RoomList({ sessionToken, onJoinRoom }) {
         ))}
       </div>
 
-      {/* Пагинация */}
       {totalPages > 1 && (
         <div className="room-pagination">
-          <button disabled={safePage === 0} onClick={() => setPage(p => p - 1)}>←</button>
-          <span>{safePage + 1} / {totalPages}</span>
-          <button disabled={safePage >= totalPages - 1} onClick={() => setPage(p => p + 1)}>→</button>
+          <button disabled={safePage === 0} onClick={() => setPage(p => p - 1)}>‹</button>
+          <span>{safePage + 1}/{totalPages}</span>
+          <button disabled={safePage >= totalPages - 1} onClick={() => setPage(p => p + 1)}>›</button>
         </div>
       )}
     </div>
