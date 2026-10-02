@@ -230,6 +230,30 @@ export function useRoom() {
     }
   }, [isCamOn, updateParticipants])
 
+  // Перезапуск камеры при смене качества
+  useEffect(() => {
+    if (!isCamOn || !roomRef.current) return
+    const restart = async () => {
+      try {
+        const camPreset = CAMERA_QUALITY[cameraQuality] || CAMERA_QUALITY.medium
+        // Обновляем кодек
+        if (roomRef.current.options.publishDefaults) {
+          roomRef.current.options.publishDefaults.videoEncoding = {
+            maxBitrate: camPreset.maxBitrate,
+            maxFramerate: camPreset.maxFps,
+          }
+        }
+        // Перезапускаем камеру с новым качеством
+        await roomRef.current.localParticipant.setCameraEnabled(false)
+        await roomRef.current.localParticipant.setCameraEnabled(true)
+        updateParticipants()
+      } catch (e) {
+        console.warn('Не удалось обновить качество камеры:', e)
+      }
+    }
+    restart()
+  }, [cameraQuality]) // eslint-disable-line react-hooks/exhaustive-deps
+
   const toggleScreen = useCallback(async () => {
     if (!roomRef.current) return
     if (!isScreenSharing) {
