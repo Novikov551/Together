@@ -18,7 +18,6 @@ public partial class MainWindow : Window
         InitializeComponent();
         Loaded += OnWindowLoaded;
         Closing += OnWindowClosing;
-        StateChanged += OnWindowStateChanged;
         TitleBar.MouseLeftButtonDown += OnTitleBarMouseDown;
         InitTrayIcon();
     }
@@ -29,20 +28,26 @@ public partial class MainWindow : Window
         {
             Text = "Together",
             Visible = true,
+            Icon = System.Drawing.SystemIcons.Application,
         };
 
         try
         {
-            var stream = System.Reflection.Assembly.GetExecutingAssembly()
-                .GetManifestResourceStream("Together.Desktop.icon.ico");
-            _trayIcon.Icon = stream != null
-                ? new System.Drawing.Icon(stream)
-                : System.Drawing.SystemIcons.Application;
+            var basePath = AppDomain.CurrentDomain.BaseDirectory;
+            var iconPath = Path.Combine(basePath, "icon.ico");
+            if (File.Exists(iconPath))
+            {
+                _trayIcon.Icon = new System.Drawing.Icon(iconPath);
+            }
+            else
+            {
+                var stream = typeof(MainWindow).Assembly
+                    .GetManifestResourceStream("Together.Desktop.icon.ico");
+                if (stream != null)
+                    _trayIcon.Icon = new System.Drawing.Icon(stream);
+            }
         }
-        catch
-        {
-            _trayIcon.Icon = System.Drawing.SystemIcons.Application;
-        }
+        catch { }
 
         _trayIcon.DoubleClick += (_, _) =>
         {
@@ -111,6 +116,7 @@ public partial class MainWindow : Window
 
     private void BtnClose_Click(object sender, RoutedEventArgs e)
     {
+        _trayIcon?.Visible = false;
         _trayIcon?.Dispose();
         Application.Current.Shutdown();
     }
@@ -119,7 +125,6 @@ public partial class MainWindow : Window
         WindowState = WindowState == WindowState.Maximized
             ? WindowState.Normal
             : WindowState.Maximized;
-
 
     private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
     {
@@ -158,6 +163,7 @@ public partial class MainWindow : Window
 
     private void OnWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
+        _trayIcon?.Visible = false;
         _trayIcon?.Dispose();
         WebView?.Dispose();
     }
