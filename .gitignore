@@ -56,3 +56,5 @@ frontend/*.local
 # Logs
 logs/
 *.log
+# Deploy scripts with credentials
+deploy.sh
