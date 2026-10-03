@@ -116,8 +116,7 @@ public partial class MainWindow : Window
 
     private void BtnClose_Click(object sender, RoutedEventArgs e)
     {
-        _trayIcon?.Visible = false;
-        _trayIcon?.Dispose();
+        if (_trayIcon != null) { _trayIcon.Visible = false; _trayIcon.Dispose(); }
         Application.Current.Shutdown();
     }
 
@@ -163,8 +162,7 @@ public partial class MainWindow : Window
 
     private void OnWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
     {
-        _trayIcon?.Visible = false;
-        _trayIcon?.Dispose();
+        if (_trayIcon != null) { _trayIcon.Visible = false; _trayIcon.Dispose(); }
         WebView?.Dispose();
     }
 }
