@@ -25,11 +25,21 @@ public partial class MainWindow : Window
 
     private void InitTrayIcon()
     {
+        System.Drawing.Icon icon;
+        try
+        {
+            icon = new System.Drawing.Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "icon.ico"));
+        }
+        catch
+        {
+            icon = System.Drawing.SystemIcons.Application;
+        }
+
         _trayIcon = new NotifyIcon
         {
             Text = "Together",
             Visible = true,
-            Icon = new System.Drawing.Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "icon.ico")),
+            Icon = icon,
         };
 
         _trayIcon.DoubleClick += (_, _) =>
