@@ -1,77 +1,135 @@
 # Together
 
-Group video calls with screen sharing, chat, and device settings.
+Групповые видеозвонки с демонстрацией экрана, чатом и настройками устройств. Работает в браузере и как десктопное приложение (Windows).
 
-## Architecture
+## Архитектура
 
-![Architecture](./architecture.png)
+![Архитектура](./architecture.png)
 
-### How the connection works
+### Как работает приложение
 
 ```
-User (Browser)
+Пользователь (браузер / десктопное приложение)
        │
-       │  1. HTTPS: login/password
+       │  1. Вводит логин и пароль
        ▼
     Nginx (SSL, reverse proxy)
        │
-       ├──→ Frontend (React SPA) — serves static files
+       ├──→ Frontend (React SPA)
+       │       • Отдаёт HTML/CSS/JS
        │
        ├──→ Backend (.NET API)
        │       │
-       │       │  2. Validates login/password
-       │       │  3. Returns JWT session token
+       │       │  2. POST /api/authorization/login
+       │       │     Проверяет логин/пароль (constant-time)
+       │       │     Возвращает JWT сессионный токен (1 час)
        │       │
-       │       │  4. Accepts JWT + display name + room
-       │       │  5. Generates LiveKit Access Token
+       │       │  3. GET /api/rooms/all
+       │       │     Возвращает список активных комнат с участниками
+       │       │     (требует JWT)
+       │       │
+       │       │  4. POST /api/livekit/token
+       │       │     Проверяет пароль комнаты (если приватная)
+       │       │     Генерирует LiveKit Access Token
+       │       │     Возвращает токен + WebSocket URL
+       │       │
+       │       │  5. POST /api/rooms
+       │       │     Создаёт комнату в LiveKit
+       │       │     Устанавливает пароль (если приватная)
+       │       │
+       │       │  6. DELETE /api/rooms/{name}
+       │       │     Удаляет комнату если нет участников
        │       ▼
        │    LiveKit Server (WebRTC SFU)
        │       │
-       │       │  6. WebSocket: join room
-       │       │  7. WebRTC: video, audio, screen
-       │       │  8. Data Channel: text chat
+       │       │  7. WebSocket: подключение к комнате
+       │       │  8. WebRTC: видео, аудио, демонстрация экрана
+       │       │  9. Data Channel: текстовый чат
        │       ▼
-       └──→ /rtc → LiveKit (proxies WebSocket)
+       └──→ /rtc → LiveKit (проксирует WebSocket)
 ```
 
-### Components
+### Сценарий использования
 
-**Frontend** — React + Vite SPA with three screens:
-- **Login** — enter login and password, get JWT token
-- **Lobby** — choose name, room, avatar, configure microphone/camera/speakers, test microphone
-- **Call** — video call: participant grid, mic/camera/screen controls, chat, quality settings
+1. **Логин** — пользователь вводит логин/пароль, получает JWT токен. Можно включить "Запомнить меня" (хранится в localStorage).
 
-**Backend** — ASP.NET Core 9:
-- `POST /api/authorization/login` — authentication, returns JWT
-- `POST /api/authorization/token` — generates LiveKit Access Token (requires JWT)
-- JWT authentication, Swagger, Serilog, Health Checks
+2. **Лобби** — после логина:
+   - Слева — форма входа: имя, комната, аватар, переключатель приватная/публичная
+   - Справа — список активных комнат с участниками, поиск, пагинация
+   - Можно создать комнату через форму (с паролем или без)
+   - Можно подключиться к существующей комнате из списка
 
-**LiveKit** — Open-source WebRTC SFU (Selective Forwarding Unit):
-- Does not transcode media, forwards between participants
-- Adaptive bitrate, simulcast (multiple quality layers)
-- Rooms, participant management, Data Channel for chat
+3. **Подключение** — при нажатии "Подключиться":
+   - Если комната приватная → модалка с вводом пароля
+   - Фронтенд отправляет `POST /api/livekit/token` с JWT + имя + комната + пароль
+   - Бэкенд проверяет пароль, генерирует LiveKit Access Token
+   - Фронтенд подключается к LiveKit через WebSocket с этим токеном
 
-### Stack
+4. **Видеозвонок** — после подключения:
+   - Видеосетка (Discord-стиль: клик на тайл → фокус, остальные в sidebar)
+   - Управление: микрофон, камера, демонстрация экрана
+   - Качество камеры/демонстрации настраивается отдельно
+   - Чат через Data Channel
+   - ПКМ на участнике → настройки громкости
+   - При выходе → комната удаляется если участников нет
 
-| Layer | Technologies |
-|-------|-------------|
+### API Endpoints
+
+| Endpoint | Метод | Описание | Авторизация |
+|----------|-------|----------|-------------|
+| `/api/authorization/login` | POST | Логин, получение JWT | Нет |
+| `/api/livekit/token` | POST | Получение LiveKit Access Token | JWT |
+| `/api/rooms/all` | GET | Список комнат с участниками | JWT |
+| `/api/rooms/{name}/participants` | GET | Участники комнаты | JWT |
+| `/api/rooms` | POST | Создание комнаты | JWT |
+| `/api/rooms/{name}` | DELETE | Удаление комнаты | JWT |
+
+## Стек
+
+| Слой | Технологии |
+|------|-----------|
 | Frontend | React, Vite, livekit-client |
 | Backend | .NET 9, ASP.NET Core, JWT, Serilog |
-| Media | LiveKit Server (WebRTC SFU) |
-| Proxy | Nginx (SSL termination, reverse proxy) |
-| Deployment | Docker, Docker Compose |
+| Медиа | LiveKit Server (WebRTC SFU) |
+| Прокси | Nginx (SSL, reverse proxy) |
+| Десктоп | WPF + WebView2 (.NET 9) |
+| Развёртывание | Docker, Docker Compose |
 
-## Secrets Configuration
+## Десктопное приложение
 
-Before running, create two files with secrets:
+Обёртка на WPF + WebView2. Загружает фронтенд из WebView2 (тот же Chromium, что в Edge).
 
-### 1. `backend/Together/appsettings.Development.json`
+**Особенности:**
+- Кастомный тайтлбар без стандартной рамки Windows
+- Кнопки: свернуть, развернуть, закрыть
+- Системный трей (иконка, контекстное меню "Открыть" / "Выход")
+- Внешние ссылки открываются в браузере
+- Recovery при краше Chromium-процесса
+- Портативный .exe (~170 MB, включает .NET Runtime)
+
+**Сборка:**
+```powershell
+cd Together.Desktop/Together.Desktop
+dotnet publish -c Release -r win-x64 --self-contained true /p:PublishSingleFile=true /p:IncludeNativeLibrariesForSelfExtract=true
+```
+
+**Установщик (Inno Setup):**
+```
+Together.Desktop/installer.iss → Build → Compile
+```
+Результат: `Together.Desktop/installer/TogetherSetup.exe`
+
+## Настройка секретов
+
+### `backend/Together/appsettings.Development.json`
 
 ```json
 {
-  "LiveKit": {
+  "LiveKitConfig": {
     "ApiKey": "your-api-key",
-    "ApiSecret": "your-api-secret"
+    "ApiSecret": "your-api-secret",
+    "WebSocketUrl": "ws://localhost:7880",
+    "HttpUrl": "http://livekit:7880"
   },
   "Jwt": {
     "Secret": "your-secret-at-least-32-chars"
@@ -83,25 +141,60 @@ Before running, create two files with secrets:
 }
 ```
 
-### 2. `livekit/livekit.yaml`
+### `livekit/livekit.yaml`
 
-Copy `livekit/livekit.yaml.example` and fill in real values:
+Скопировать `livekit/livekit.yaml.example` и заполнить реальными ключами.
 
-```yaml
-keys:
-  your-api-key: your-api-secret
-```
-
-## Server Deployment
+## Развёртывание
 
 ```bash
-# Build and push images
+# Собрать и запушить образы
 ./deploy.sh
 
-# On the server:
+# На сервере:
 cd /opt/together
 docker compose -f docker-compose.server.yml pull
 docker compose -f docker-compose.server.yml up -d
 ```
 
-For HTTPS you need SSL certificates (e.g. via Let's Encrypt) and set the paths in `docker-compose.server.yml`.
+Для HTTPS нужны SSL-сертификаты (например Let's Encrypt) и пути в `docker-compose.server.yml`.
+
+## Структура проекта
+
+```
+Together/
+├── backend/
+│   ├── Together/                    # API слой (контроллеры, middleware)
+│   │   ├── Endpoints/
+│   │   │   ├── Authorization/       # Логин, JWT
+│   │   │   ├── LiveKit/             # Выдача токенов LiveKit
+│   │   │   └── Rooms/               # CRUD комнат
+│   │   ├── Extensions/              # DI, pipeline, Swagger
+│   │   └── Logging/                 # Request body logging
+│   ├── Together.Logic/              # Бизнес-логика
+│   │   ├── Rooms/                   # RoomService, IRoomService
+│   │   └── Models/                  # DTO
+│   └── Together.Integrations/       # Внешние сервисы
+│       └── LiveKit/                 # ILiveKitService, LiveKitService
+├── frontend/
+│   └── src/
+│       ├── components/
+│       │   ├── Login/               # Экран логина
+│       │   ├── Lobby/               # Лобби, список комнат, модалка
+│       │   ├── Call/                # Видеозвонок
+│       │   ├── VideoGrid/           # Сетка участников
+│       │   ├── Controls/            # Панель управления
+│       │   └── Chat/                # Чат
+│       ├── hooks/                   # useRoom, useDevices, useSettings
+│       └── services/                # api.js, sounds.js
+├── Together.Desktop/                # WPF + WebView2 обёртка
+│   └── Together.Desktop/
+│       ├── MainWindow.xaml           # UI (кастомный тайтлбар)
+│       ├── MainWindow.xaml.cs        # WebView2, трей, lifecycle
+│       └── installer.iss             # Inno Setup скрипт
+├── livekit/
+│   └── livekit.yaml.example         # Конфиг LiveKit
+├── docker-compose.yml               # Локальная разработка
+├── docker-compose.server.yml        # Продакшен
+└── deploy.sh                        # Сборка и пуш образов
+```
