@@ -1,5 +1,6 @@
 const AUTH_BASE = '/api/authorization'
 const ROOMS_BASE = '/api/rooms'
+const LIVEKIT_BASE = '/api/livekit'
 
 export async function login(username, password) {
   const res = await fetch(`${AUTH_BASE}/login`, {
@@ -15,7 +16,7 @@ export async function getLiveKitToken(sessionToken, displayName, roomName, passw
   const body = { display_name: displayName, room_name: roomName }
   if (password) body.password = password
 
-  const res = await fetch(`${AUTH_BASE}/token`, {
+  const res = await fetch(`${LIVEKIT_BASE}/token`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

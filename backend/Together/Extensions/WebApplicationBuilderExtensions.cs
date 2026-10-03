@@ -92,21 +92,13 @@ namespace Together.Extensions
             builder.Services.AddControllers(options =>
             {
                 options.OutputFormatters.RemoveType<HttpNoContentOutputFormatter>();
-            })
-                .AddJsonOptions(options =>
-                {
-                    options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-                    options.JsonSerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
-                    options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
-                    options.JsonSerializerOptions.AllowTrailingCommas = true;
-                });
+            });
             builder.Services.AddResponseCaching();
 
             builder.Services.AddHttpContextAccessor();
             builder.Services.Configure<JsonOptions>(options =>
             {
                 options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
-                options.SerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
                 options.SerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
                 options.SerializerOptions.AllowTrailingCommas = true;
             });

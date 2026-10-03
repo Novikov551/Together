@@ -1,10 +1,10 @@
-using Livekit.Server.Sdk.Dotnet;
+﻿using Livekit.Server.Sdk.Dotnet;
 using Microsoft.Extensions.Options;
 using Together.Integrations.Config;
 
-namespace Together.Integrations
+namespace Together.Integrations.LiveKit
 {
-    public class LiveKitService
+    public class LiveKitService : ILiveKitService
     {
         private readonly LiveKitConfig _config;
         private readonly RoomServiceClient _roomServiceClient;
@@ -23,34 +23,38 @@ namespace Together.Integrations
                 _config.ApiSecret);
         }
 
-        public async Task<List<string>> GetRoomsAsync(CancellationToken ct = default)
+        public async Task<List<(string Name, uint NumParticipants)>> GetRoomsAsync(CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
 
             var response = await _roomServiceClient.ListRooms(new ListRoomsRequest());
-            if(response == null)
+            if (response == null)
             {
                 throw new Exception("Ошибка LiveKit");//TODO потом кастомный сделать 
             }
 
-            return response.Rooms.Where(r => r.NumParticipants > 0).Select(e => e.Name).ToList();
+            return response.Rooms.Select(e => (e.Name, e.NumParticipants)).ToList();
         }
 
         public async Task<List<string>> GetRoomParticipantsAsync(string roomName, CancellationToken ct = default)
         {
             ct.ThrowIfCancellationRequested();
 
-            var response = await _roomServiceClient.ListParticipants(new ListParticipantsRequest
+            try
             {
-                Room = roomName
-            });
+                var response = await _roomServiceClient.ListParticipants(new ListParticipantsRequest
+                {
+                    Room = roomName
+                });
 
-            if (response == null)
-            {
-                throw new Exception("Ошибка LiveKit");//TODO потом кастомный сделать 
+                return response.Participants.Select(e => e.Name).ToList();
             }
+            catch(Exception ex)
+            {
+                Console.WriteLine($"LiveKit error type: {ex.GetType().Name}, message: {ex.Message}");//TODO убрать
 
-            return response.Participants.Select(e => e.Name).ToList();
+                return [];
+            }
         }
 
         public async Task<string> CreateRoomAsync(string roomName, CancellationToken ct = default)

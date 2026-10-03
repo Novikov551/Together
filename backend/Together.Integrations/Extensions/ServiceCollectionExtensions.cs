@@ -1,5 +1,6 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
 using Together.Integrations.Config;
+using Together.Integrations.LiveKit;
 
 namespace Together.Integrations.Extensions
 {
@@ -26,7 +27,7 @@ namespace Together.Integrations.Extensions
 
         private static IServiceCollection AddLiveKitService(this IServiceCollection services)
         {
-            services.AddSingleton<LiveKitService>();
+            services.AddSingleton<ILiveKitService, LiveKitService>();
 
             return services;
         }

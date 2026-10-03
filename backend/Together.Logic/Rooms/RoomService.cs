@@ -1,7 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
-using Together.Integrations;
+using Together.Integrations.LiveKit;
 using Together.Logic.Models;
 
 namespace Together.Logic.Rooms
@@ -10,9 +10,9 @@ namespace Together.Logic.Rooms
     {
         private readonly ConcurrentDictionary<string, string> _rooms;
         private readonly SemaphoreSlim _deleteLock = new(1, 1);
-        private readonly LiveKitService _liveKitService;
+        private readonly ILiveKitService _liveKitService;
 
-        public RoomService(LiveKitService liveKitService)
+        public RoomService(ILiveKitService liveKitService)
         {
             _rooms = new ConcurrentDictionary<string, string>();
             _liveKitService = liveKitService;
@@ -22,7 +22,7 @@ namespace Together.Logic.Rooms
         {
             var rooms = await _liveKitService.GetRoomsAsync(ct);
             return rooms
-                .Where(e=>e.NumParticipants > 0)
+                .Where(e => e.NumParticipants > 0)
                 .Select(e => new RoomShortInfoDto(e.Name, IsPrivateRoom(e.Name))).ToList();
         }
 
@@ -68,32 +68,21 @@ namespace Together.Logic.Rooms
 
         public async Task DeleteRoomAsync(string roomName, CancellationToken ct = default)
         {
-            await _deleteLock.WaitAsync(ct);
-            try
+            var participants = await _liveKitService.GetRoomParticipantsAsync(roomName, ct);
+            if (participants.Count > 0)
             {
-                var participants = await _liveKitService.GetRoomParticipantsAsync(roomName, ct);
-                if (participants.Count > 0) return;
+                return;
+            }
 
-                await _liveKitService.DeleteRoomAsync(roomName, ct);
-                _rooms.TryRemove(roomName, out _);
-            }
-            finally
-            {
-                _deleteLock.Release();
-            }
+            await _liveKitService.DeleteRoomAsync(roomName, ct);
+            _rooms.TryRemove(roomName, out _);
         }
 
         #region Private
 
         private bool IsPrivateRoom(string room)
         {
-            bool isPrivate = false;
-            if (_rooms.TryGetValue(room, out var _))
-            {
-                isPrivate = true;
-            }
-
-            return isPrivate;
+            return _rooms.ContainsKey(room);
         }
 
         private async Task<List<string>> GetRoomParticipantsAsync(string room, CancellationToken ct = default)
@@ -107,15 +96,13 @@ namespace Together.Logic.Rooms
 
             if (!string.IsNullOrEmpty(pass))
             {
-                if (_rooms.TryGetValue(roomName, out var password))
+                if (_rooms.ContainsKey(roomName))
                 {
                     return;
                 }
-                else
-                {
-                    var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(pass)));
-                    _rooms.TryAdd(roomName, hash);
-                }
+
+                var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(pass)));
+                _rooms[roomName] = hash;
             }
         }
 

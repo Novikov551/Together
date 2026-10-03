@@ -1,14 +1,12 @@
-﻿using System.IdentityModel.Tokens.Jwt;
-using System.Security.Claims;
-using System.Text;
-using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.IdentityModel.Tokens;
 using Swashbuckle.AspNetCore.Annotations;
+using System.IdentityModel.Tokens.Jwt;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Text;
 using Together.Endpoints.Authorization.Models.Requests;
 using Together.Endpoints.Authorization.Models.Responses;
-using Together.Integrations;
-using Together.Logic.Rooms;
 
 namespace Together.Endpoints.Authorization
 {
@@ -17,16 +15,10 @@ namespace Together.Endpoints.Authorization
     public class AuthorizationController : BaseController
     {
         private readonly IConfiguration _config;
-        private readonly IRoomService _roomService;
-        private readonly LiveKitService _liveKitService;
 
-        public AuthorizationController(IConfiguration config,
-            IRoomService roomStoreService,
-            LiveKitService liveKitService)
+        public AuthorizationController(IConfiguration config)
         {
             _config = config;
-            _roomService = roomStoreService;
-            _liveKitService = liveKitService;
         }
 
         [SwaggerOperation(Summary = "Вход")]
@@ -43,8 +35,11 @@ namespace Together.Endpoints.Authorization
 
             var adminProfile = _config.GetSection("AdminProfile");
 
-            if (request.UserName != adminProfile["user_name"] || request.Password != adminProfile["password"])
+            if (!CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(request.UserName), Encoding.UTF8.GetBytes(adminProfile["user_name"])) 
+                || !CryptographicOperations.FixedTimeEquals(Encoding.UTF8.GetBytes(request.Password), Encoding.UTF8.GetBytes(adminProfile["password"])))
+            {
                 return Unauthorized("Неверный логин или пароль");
+            }
 
             // Генерируем сессионный JWT
             var jwtSecret = _config["Jwt:Secret"];
@@ -61,29 +56,6 @@ namespace Together.Endpoints.Authorization
 
             // Возвращаем только сессионный токен (без списка комнат)
             return Ok(new { sessionToken });
-        }
-
-        [Authorize]
-        [SwaggerOperation(Summary = "Получение токена LiveKit")]
-        [HttpPost("token")]
-        [ProducesResponseType(200)]
-        public async Task<IActionResult> GetLiveKitToken([FromBody] GetLiveKitTokenRequest request,
-            CancellationToken ct = default)
-        {
-            var result = await _roomService.ValidatePasswordAsync(request.RoomName, request.Password, ct);
-            if(!result)
-            {
-                return Unauthorized("Неверный пароль от комнаты");
-            }
-
-            var token = await _liveKitService.GenerateTokenAsync(request.DisplayName, request.RoomName, ct);
-            var url = await _liveKitService.GetWebSocketUrlAsync(ct);
-
-            return Ok(new LiveKitTokenResponse
-            {
-                LiveKitToken = token,
-                LiveKitUrl = url
-            });
         }
     }
 }
