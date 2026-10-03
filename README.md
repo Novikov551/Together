@@ -71,3 +71,39 @@
 | `/api/rooms/{name}/participants` | GET | Участники комнаты | JWT |
 | `/api/rooms` | POST | Создание комнаты | JWT |
 | `/api/rooms/{name}` | DELETE | Удаление комнаты | JWT |
+## Развёртывание на своём сервере
+
+### Требования
+
+- Docker и Docker Compose
+- Домен с SSL-сертификатом (например Let's Encrypt)
+- Порты: 443 (HTTPS), 7880 (LiveKit), 5163 (Backend)
+
+### Шаги
+
+1. Клонировать репозиторий:
+```bash
+git clone https://github.com/Novikov551/Together.git
+cd Together
+```
+
+2. Создать конфигурационные файлы:
+
+**`backend/Together/appsettings.Development.json`** — скопировать из примера и заполнить реальными значениями.
+
+**`livekit/livekit.yaml`** — скопировать из `livekit/livekit.yaml.example` и заполнить ключами.
+
+**`docker-compose.server.yml`** — скопировать из `docker-compose.server.yml.example` и заполнить:
+- `LiveKitConfig__ApiKey` / `LiveKitConfig__ApiSecret` — ключи из livekit.yaml
+- `LiveKitConfig__HttpUrl` — адрес LiveKit API (например `http://livekit:7880`)
+- `LiveKit__WebSocketUrl` — WebSocket адрес LiveKit (например `ws://localhost:7880`)
+- `Jwt__Secret` — секрет для JWT (минимум 32 символа)
+- `AdminProfile__user_name` / `AdminProfile__password` — логин/пароль администратора
+- Пути к SSL-сертификатам в секции frontend volumes
+
+3. Собрать и запустить:
+```bash
+docker compose -f docker-compose.server.yml up -d --build
+```
+
+4. Приложение будет доступно по `https://ваш-домен:8443`.
