@@ -109,10 +109,6 @@ public partial class MainWindow : Window
 
     private void OnWindowStateChanged(object? sender, EventArgs e)
     {
-        if (WindowState == WindowState.Minimized)
-        {
-            Hide();
-        }
     }
 
     private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
