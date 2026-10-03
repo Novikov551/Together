@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.AspNetCore.Mvc.Formatters;
 using Microsoft.IdentityModel.Tokens;
@@ -96,6 +96,7 @@ namespace Together.Extensions
                 .AddJsonOptions(options =>
                 {
                     options.JsonSerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+                    options.JsonSerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
                     options.JsonSerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
                     options.JsonSerializerOptions.AllowTrailingCommas = true;
                 });
@@ -105,6 +106,7 @@ namespace Together.Extensions
             builder.Services.Configure<JsonOptions>(options =>
             {
                 options.SerializerOptions.PropertyNamingPolicy = JsonNamingPolicy.SnakeCaseLower;
+                options.SerializerOptions.Encoder = JavaScriptEncoder.UnsafeRelaxedJsonEscaping;
                 options.SerializerOptions.NumberHandling = JsonNumberHandling.AllowReadingFromString;
                 options.SerializerOptions.AllowTrailingCommas = true;
             });
