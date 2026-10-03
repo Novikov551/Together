@@ -77,7 +77,7 @@ export default function Lobby({ sessionToken, onJoin, showToast, settings, updat
     } catch {
       // Комната уже существует — ок
     }
-    await doJoin(name.trim(), room.trim(), null)
+    await doJoin(name.trim(), room.trim(), isPrivate ? roomPassword : null)
   }
 
   // Клик "Подключиться" из списка комнат
