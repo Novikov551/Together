@@ -1,109 +1,110 @@
 # Together
 
-Групповые видеозвонки с демонстрацией экрана, чатом и настройками устройств.
+Group video calls with screen sharing, chat, and device settings.
 
-## Архитектура
+## Architecture
 
-![Архитектура](./architecture.png)
+![Architecture](./architecture.png)
 
-## Компоненты
+## Components
 
 ### Frontend (React + Vite)
 
-Клиентское приложение. Работает в браузере или внутри десктопной обёртки. Отображает три экрана: логин, лобби, видеозвонок.
+Client application. Runs in a browser or inside the desktop wrapper. Displays three screens: login, lobby, and video call.
 
-При запуске видеозвонка:
-- Запрашивает у бэкенда LiveKit Access Token (с JWT авторизацией)
-- Подключается к LiveKit Server через WebSocket с этим токеном
-- LiveKit отдаёт и принимает медиапотоки (видео, аудио, демонстрация экрана)
-- Текстовый чат идёт через Data Channel (встроенный канал данных в WebRTC)
+When starting a video call:
+- Requests a LiveKit Access Token from the backend (with JWT authorization)
+- Connects to LiveKit Server via WebSocket using that token
+- LiveKit delivers and receives media streams (video, audio, screen share)
+- Text chat goes through Data Channel (built-in data channel in WebRTC)
 
 ### Backend (ASP.NET Core 9)
 
-Серверная часть. Обрабатывает авторизацию, управляет комнатами, генерирует токены для подключения к LiveKit.
+Server side. Handles authorization, manages rooms, generates tokens for connecting to LiveKit.
 
-Взаимодействия:
-- Получает от фронтенда логин/пароль → выдаёт JWT сессионный токен
-- Получает JWT + имя + комнату → проверяет пароль комнаты (если приватная) → генерирует LiveKit Access Token и отдаёт фронтенду
-- Создаёт и удаляет комнаты в LiveKit через серверный SDK
-- Хранит пароли приватных комнат в памяти (ConcurrentDictionary)
+Interactions:
+- Receives login/password from the frontend → issues a JWT session token
+- Receives JWT + name + room → validates the room password (if private) → generates a LiveKit Access Token and returns it to the frontend
+- Creates and deletes rooms in LiveKit via the server SDK
+- Stores private room passwords in memory (ConcurrentDictionary)
 
 ### LiveKit Server (WebRTC SFU)
 
-Медиасервер. Принимает и пересылает аудио/видео потоки между участниками. Не перекодирует — только пересылает (Selective Forwarding Unit).
+Media server. Receives and forwards audio/video streams between participants. Does not transcode — only forwards (Selective Forwarding Unit).
 
-Взаимодействия:
-- Принимает WebSocket подключения от фронтенда (через прокси Nginx)
-- Принимает API-запросы от бэкенда (создание комнат, получение участников, генерация токенов, удаление комнат)
-- Управляет комнатами и участниками
+Interactions:
+- Accepts WebSocket connections from the frontend (via Nginx proxy)
+- Accepts API requests from the backend (room creation, participant listing, token generation, room deletion)
+- Manages rooms and participants
 
 ### Nginx
 
-Обратный прокси. Принимает все входящие запросы и распределяет по сервисам:
-- `/` → Frontend (статические файлы React)
+Reverse proxy. Accepts all incoming requests and routes them to services:
+- `/` → Frontend (static React files)
 - `/api/` → Backend (.NET API)
-- `/rtc` → LiveKit (проксирует WebSocket)
+- `/rtc` → LiveKit (proxies WebSocket)
 
-Также terminирует SSL (HTTPS).
+Also handles SSL termination (HTTPS).
 
 ### Desktop (WPF + WebView2)
 
-Десктопная обёртка для Windows. Содержит встроенный браузер (Chromium через WebView2), который загружает фронтенд. Работает как обычное .exe приложение без адресной строки браузера.
+Desktop wrapper for Windows. Contains an embedded browser (Chromium via WebView2) that loads the frontend. Works as a regular .exe application without browser address bar.
 
-## Стек
+## Stack
 
-| Слой | Технологии |
-|------|-----------|
+| Layer | Technologies |
+|-------|-------------|
 | Frontend | React, Vite, livekit-client |
 | Backend | .NET 9, ASP.NET Core, JWT, Serilog |
-| Медиа | LiveKit Server (WebRTC SFU) |
-| Прокси | Nginx (SSL, reverse proxy) |
-| Десктоп | WPF + WebView2 (.NET 9) |
-| Развёртывание | Docker, Docker Compose |
+| Media | LiveKit Server (WebRTC SFU) |
+| Proxy | Nginx (SSL, reverse proxy) |
+| Desktop | WPF + WebView2 (.NET 9) |
+| Deployment | Docker, Docker Compose |
 
 ## API Endpoints
 
-| Endpoint | Метод | Описание | Авторизация |
-|----------|-------|----------|-------------|
-| `/api/authorization/login` | POST | Логин, получение JWT | Нет |
-| `/api/livekit/token` | POST | Получение LiveKit Access Token | JWT |
-| `/api/rooms/all` | GET | Список комнат с участниками | JWT |
-| `/api/rooms/{name}/participants` | GET | Участники комнаты | JWT |
-| `/api/rooms` | POST | Создание комнаты | JWT |
-| `/api/rooms/{name}` | DELETE | Удаление комнаты | JWT |
-## Развёртывание на своём сервере
+| Endpoint | Method | Description | Auth |
+|----------|--------|-------------|------|
+| `/api/authorization/login` | POST | Login, get JWT | No |
+| `/api/livekit/token` | POST | Get LiveKit Access Token | JWT |
+| `/api/rooms/all` | GET | List rooms with participants | JWT |
+| `/api/rooms/{name}/participants` | GET | Room participants | JWT |
+| `/api/rooms` | POST | Create room | JWT |
+| `/api/rooms/{name}` | DELETE | Delete room | JWT |
 
-### Требования
+## Deployment
 
-- Docker и Docker Compose
-- Домен с SSL-сертификатом (например Let's Encrypt)
-- Порты: 443 (HTTPS), 7880 (LiveKit), 5163 (Backend)
+### Requirements
 
-### Шаги
+- Docker and Docker Compose
+- Domain with SSL certificate (e.g. Let's Encrypt)
+- Ports: 443 (HTTPS), 7880 (LiveKit), 5163 (Backend)
 
-1. Клонировать репозиторий:
+### Steps
+
+1. Clone the repository:
 ```bash
 git clone https://github.com/Novikov551/Together.git
 cd Together
 ```
 
-2. Создать конфигурационные файлы:
+2. Create configuration files:
 
-**`backend/Together/appsettings.Development.json`** — скопировать из примера и заполнить реальными значениями.
+**`backend/Together/appsettings.Development.json`** — copy from the example and fill in real values.
 
-**`livekit/livekit.yaml`** — скопировать из `livekit/livekit.yaml.example` и заполнить ключами.
+**`livekit/livekit.yaml`** — copy from `livekit/livekit.yaml.example` and fill in your keys.
 
-**`docker-compose.server.yml`** — скопировать из `docker-compose.server.yml.example` и заполнить:
-- `LiveKitConfig__ApiKey` / `LiveKitConfig__ApiSecret` — ключи из livekit.yaml
-- `LiveKitConfig__HttpUrl` — адрес LiveKit API (например `http://livekit:7880`)
-- `LiveKit__WebSocketUrl` — WebSocket адрес LiveKit (например `ws://localhost:7880`)
-- `Jwt__Secret` — секрет для JWT (минимум 32 символа)
-- `AdminProfile__user_name` / `AdminProfile__password` — логин/пароль администратора
-- Пути к SSL-сертификатам в секции frontend volumes
+**`docker-compose.server.yml`** — copy from `docker-compose.server.yml.example` and fill in:
+- `LiveKitConfig__ApiKey` / `LiveKitConfig__ApiSecret` — keys from livekit.yaml
+- `LiveKitConfig__HttpUrl` — LiveKit API address (e.g. `http://livekit:7880`)
+- `LiveKit__WebSocketUrl` — LiveKit WebSocket address (e.g. `ws://localhost:7880`)
+- `Jwt__Secret` — JWT secret (at least 32 characters)
+- `AdminProfile__user_name` / `AdminProfile__password` — admin login/password
+- SSL certificate paths in the frontend volumes section
 
-3. Собрать и запустить:
+3. Build and start:
 ```bash
 docker compose -f docker-compose.server.yml up -d --build
 ```
 
-4. Приложение будет доступно по `https://ваш-домен:8443`.
+4. The application will be available at `https://your-domain:8443`.
