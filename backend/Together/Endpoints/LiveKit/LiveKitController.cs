@@ -1,8 +1,8 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Swashbuckle.AspNetCore.Annotations;
-using Together.Endpoints.Authorization.Models.Requests;
-using Together.Endpoints.Authorization.Models.Responses;
+using Together.Endpoints.LiveKit.Models.Requests;
+using Together.Endpoints.LiveKit.Models.Responses;
 using Together.Integrations.LiveKit;
 using Together.Logic.Rooms;
 
