@@ -28,7 +28,7 @@ public partial class MainWindow : Window
         {
             Text = "Together",
             Visible = true,
-            Icon = System.Drawing.SystemIcons.Application,
+            Icon = new System.Drawing.Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "icon.ico")),
         };
 
         _trayIcon.DoubleClick += (_, _) =>
