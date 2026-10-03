@@ -8,7 +8,6 @@
     <UseWPF>true</UseWPF>
     <UseWindowsForms>true</UseWindowsForms>
     <ApplicationIcon>icon.ico</ApplicationIcon>
-    <EmbeddedResource Include="icon.ico" />
   </PropertyGroup>
 
   <ItemGroup>
@@ -17,6 +16,7 @@
 
   <ItemGroup>
     <Content Include="icon.ico" CopyToOutputDirectory="PreserveNewest" />
+    <EmbeddedResource Include="icon.ico" />
   </ItemGroup>
 
 </Project>
