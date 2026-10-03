@@ -1,9 +1,31 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { login } from '../../services/api'
 
+const STORAGE_KEY = 'together_credentials'
+
+function loadSaved() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY)
+    if (!raw) return null
+    return JSON.parse(raw)
+  } catch {
+    return null
+  }
+}
+
+function saveCredentials(username, password) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({ username, password }))
+}
+
+function clearCredentials() {
+  localStorage.removeItem(STORAGE_KEY)
+}
+
 export default function Login({ onLogin, showToast }) {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
+  const saved = loadSaved()
+  const [username, setUsername] = useState(saved?.username || '')
+  const [password, setPassword] = useState(saved?.password || '')
+  const [remember, setRemember] = useState(!!saved)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
 
@@ -13,6 +35,11 @@ export default function Login({ onLogin, showToast }) {
     setLoading(true)
     try {
       const data = await login(username, password)
+      if (remember) {
+        saveCredentials(username, password)
+      } else {
+        clearCredentials()
+      }
       onLogin(data.session_token)
     } catch (err) {
       setError(err.message)
@@ -49,6 +76,14 @@ export default function Login({ onLogin, showToast }) {
               placeholder="Введите пароль"
             />
           </div>
+          <label className="toggle-row compact" style={{ cursor: 'pointer' }}>
+            <span>Запомнить меня</span>
+            <input
+              type="checkbox"
+              checked={remember}
+              onChange={e => setRemember(e.target.checked)}
+            />
+          </label>
           <button className="btn-primary" type="submit" disabled={loading}>
             {loading ? 'Вход...' : 'Войти'}
           </button>
