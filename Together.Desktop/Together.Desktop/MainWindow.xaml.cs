@@ -1,5 +1,6 @@
 ﻿using System.Diagnostics;
 using System.Windows;
+using System.Windows.Input;
 using Microsoft.Web.WebView2.Core;
 
 namespace Together.Desktop;
@@ -13,6 +14,7 @@ public partial class MainWindow : Window
         InitializeComponent();
         Loaded += OnWindowLoaded;
         Closing += OnWindowClosing;
+        TitleBar.MouseLeftButtonDown += OnTitleBarMouseDown;
     }
 
     private async void OnWindowLoaded(object sender, RoutedEventArgs e)
@@ -39,6 +41,32 @@ public partial class MainWindow : Window
             Close();
         }
     }
+
+    private void OnTitleBarMouseDown(object sender, MouseButtonEventArgs e)
+    {
+        if (e.ClickCount == 2)
+        {
+            ToggleMaximize();
+        }
+        else
+        {
+            DragMove();
+        }
+    }
+
+    private void BtnMinimize_Click(object sender, RoutedEventArgs e) =>
+        WindowState = WindowState.Minimized;
+
+    private void BtnMaximize_Click(object sender, RoutedEventArgs e) =>
+        ToggleMaximize();
+
+    private void BtnClose_Click(object sender, RoutedEventArgs e) =>
+        Close();
+
+    private void ToggleMaximize() =>
+        WindowState = WindowState == WindowState.Maximized
+            ? WindowState.Normal
+            : WindowState.Maximized;
 
     private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
     {
