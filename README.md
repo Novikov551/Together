@@ -49,6 +49,17 @@
        └──→ /rtc → LiveKit (проксирует WebSocket)
 ```
 
+### API Endpoints
+
+| Endpoint | Метод | Описание | Авторизация |
+|----------|-------|----------|-------------|
+| `/api/authorization/login` | POST | Логин, получение JWT | Нет |
+| `/api/livekit/token` | POST | Получение LiveKit Access Token | JWT |
+| `/api/rooms/all` | GET | Список комнат с участниками | JWT |
+| `/api/rooms/{name}/participants` | GET | Участники комнаты | JWT |
+| `/api/rooms` | POST | Создание комнаты | JWT |
+| `/api/rooms/{name}` | DELETE | Удаление комнаты | JWT |
+
 ## Стек
 
 | Слой | Технологии |
