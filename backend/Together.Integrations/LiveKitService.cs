@@ -1,4 +1,4 @@
-﻿using Livekit.Server.Sdk.Dotnet;
+using Livekit.Server.Sdk.Dotnet;
 using Microsoft.Extensions.Options;
 using Together.Integrations.Config;
 
@@ -33,7 +33,7 @@ namespace Together.Integrations
                 throw new Exception("Ошибка LiveKit");//TODO потом кастомный сделать 
             }
 
-            return response.Rooms.Select(e=>e.Name).ToList();
+            return response.Rooms.Where(r => r.NumParticipants > 0).Select(e => e.Name).ToList();
         }
 
         public async Task<List<string>> GetRoomParticipantsAsync(string roomName, CancellationToken ct = default)

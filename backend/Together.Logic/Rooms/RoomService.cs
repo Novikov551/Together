@@ -21,7 +21,9 @@ namespace Together.Logic.Rooms
         public async Task<List<RoomShortInfoDto>> GetAllRoomsAsync(CancellationToken ct = default)
         {
             var rooms = await _liveKitService.GetRoomsAsync(ct);
-            return rooms.Select(e => new RoomShortInfoDto(e, IsPrivateRoom(e))).ToList();
+            return rooms
+                .Where(e=>e.NumParticipants > 0)
+                .Select(e => new RoomShortInfoDto(e.Name, IsPrivateRoom(e.Name))).ToList();
         }
 
         public async Task CreateRoomAsync(string roomName, string? pass, CancellationToken ct = default)
@@ -107,19 +109,12 @@ namespace Together.Logic.Rooms
             {
                 if (_rooms.TryGetValue(roomName, out var password))
                 {
-                    throw new Exception($"Пароль для комнаты '{roomName}' уже задан");//TODO
+                    return;
                 }
                 else
                 {
                     var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(pass)));
                     _rooms.TryAdd(roomName, hash);
-                }
-            }
-            else
-            {
-                if (_rooms.TryGetValue(roomName, out var _))
-                {
-                    _rooms.TryRemove(roomName, out var _);
                 }
             }
         }
