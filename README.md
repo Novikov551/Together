@@ -156,7 +156,5 @@ Together/
 │       └── installer.iss             # Inno Setup скрипт
 ├── livekit/
 │   └── livekit.yaml.example         # Конфиг LiveKit
-├── docker-compose.yml               # Локальная разработка
-├── docker-compose.server.yml        # Продакшен
-└── deploy.sh                        # Сборка и пуш образов
+└── docker-compose.yml               # Локальная разработка
 ```
