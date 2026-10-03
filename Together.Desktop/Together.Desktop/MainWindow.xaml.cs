@@ -42,7 +42,6 @@ public partial class MainWindow : Window
 
     private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
     {
-        // Открывать внешние ссылки в браузере, а не в приложении
         e.Handled = true;
         Process.Start(new ProcessStartInfo(e.Uri) { UseShellExecute = true });
     }

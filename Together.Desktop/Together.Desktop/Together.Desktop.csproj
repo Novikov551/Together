@@ -6,9 +6,6 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <UseWPF>true</UseWPF>
-    <ApplicationIcon>icon.ico</ApplicationIcon>
-    <AssemblyName>Together</AssemblyName>
-    <RootNamespace>Together.Desktop</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>

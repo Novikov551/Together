@@ -9,7 +9,6 @@
         Background="#0e0e10">
 
     <Grid>
-        <!-- Индикатор загрузки -->
         <Border x:Name="LoadingOverlay"
                 Background="#0e0e10"
                 Panel.ZIndex="100">
@@ -26,7 +25,6 @@
             </StackPanel>
         </Border>
 
-        <!-- WebView2 -->
         <wv2:WebView2 x:Name="WebView"
                        Visibility="Hidden" />
     </Grid>
