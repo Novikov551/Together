@@ -121,20 +121,6 @@ Together.Desktop/installer.iss → Build → Compile
 
 Скопировать `livekit/livekit.yaml.example` и заполнить реальными ключами.
 
-## Развёртывание
-
-```bash
-# Собрать и запушить образы
-./deploy.sh
-
-# На сервере:
-cd /opt/together
-docker compose -f docker-compose.server.yml pull
-docker compose -f docker-compose.server.yml up -d
-```
-
-Для HTTPS нужны SSL-сертификаты (например Let's Encrypt) и пути в `docker-compose.server.yml`.
-
 ## Структура проекта
 
 ```

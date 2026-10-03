@@ -58,3 +58,7 @@ logs/
 *.log
 # Deploy scripts with credentials
 deploy.sh
+
+# Secrets
+docker-compose.server.yml
+appsettings.Development.json

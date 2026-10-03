@@ -18,11 +18,11 @@ services:
       - ASPNETCORE_ENVIRONMENT=Development
       - LiveKit__WebSocketUrl=ws://localhost:7880
       - LiveKitConfig__HttpUrl=http://host.docker.internal:7880
-      - LiveKitConfig__ApiKey=apikey
-      - LiveKitConfig__ApiSecret=AS1234DFAS1246DF1sdgsedthy5TO6TRgdfsgf443455
-      - Jwt__Secret=sDf8Kj2Lp9Qw5RtXz7Uy3Vn4Bm6Nc8EaG1hJ2kL3mN4oP5qR6sT7uV8wX9yZ0
-      - AdminProfile__user_name=family
-      - AdminProfile__password=F@m1ly_C4ll_2025!
+      - LiveKitConfig__ApiKey=YOUR_API_KEY
+      - LiveKitConfig__ApiSecret=YOUR_API_SECRET
+      - Jwt__Secret=YOUR_JWT_SECRET_MIN_32_CHARS
+      - AdminProfile__user_name=YOUR_USERNAME
+      - AdminProfile__password=YOUR_PASSWORD
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
@@ -37,7 +37,7 @@ services:
     extra_hosts:
       - "host.docker.internal:host-gateway"
     volumes:
-      - /etc/letsencrypt/live/together-friends.duckdns.org/fullchain.pem:/etc/nginx/ssl/fullchain.pem:ro
-      - /etc/letsencrypt/live/together-friends.duckdns.org/privkey.pem:/etc/nginx/ssl/privkey.pem:ro
+      - /etc/letsencrypt/live/YOUR_DOMAIN/fullchain.pem:/etc/nginx/ssl/fullchain.pem:ro
+      - /etc/letsencrypt/live/YOUR_DOMAIN/privkey.pem:/etc/nginx/ssl/privkey.pem:ro
     depends_on:
       - backend
