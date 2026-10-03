@@ -355,15 +355,13 @@ export function useRoom() {
   const applyAudioSettings = useCallback(async ({ noiseSuppression, echoCancellation, autoGainControl }) => {
     if (!roomRef.current || !isMicOn) return
     try {
-      const pub = roomRef.current.localParticipant.getTrackPublication('microphone')
-      if (pub && pub.track) {
-        await pub.track.setProcessor(null)
-        await pub.track.restartTrack({
-          noiseSuppression: noiseSuppression ?? true,
-          echoCancellation: echoCancellation ?? true,
-          autoGainControl: autoGainControl ?? false,
-        })
-      }
+      // Перезапускаем микрофон с новыми constraints
+      await roomRef.current.localParticipant.setMicrophoneEnabled(false)
+      await roomRef.current.localParticipant.setMicrophoneEnabled(true, undefined, {
+        noiseSuppression: noiseSuppression ?? true,
+        echoCancellation: echoCancellation ?? true,
+        autoGainControl: autoGainControl ?? false,
+      })
     } catch (e) {
       console.warn('Не удалось применить настройки аудио:', e)
     }

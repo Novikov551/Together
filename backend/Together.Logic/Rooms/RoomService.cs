@@ -1,4 +1,4 @@
-using System.Collections.Concurrent;
+﻿using System.Collections.Concurrent;
 using System.Security.Cryptography;
 using System.Text;
 using Together.Integrations;
@@ -26,11 +26,8 @@ namespace Together.Logic.Rooms
 
         public async Task CreateRoomAsync(string roomName, string? pass, CancellationToken ct = default)
         {
-            await _liveKitService.CreateRoomAsync(roomName, ct);
-            if (!_rooms.ContainsKey(roomName))
-            {
-                await SetPasswordAsync(roomName, pass, ct);
-            }
+            var room = await _liveKitService.CreateRoomAsync(roomName, ct);
+            await SetPasswordAsync(roomName, pass, ct);
         }
 
         public Task<bool> ValidatePasswordAsync(string roomName, string? pass, CancellationToken ct = default)
