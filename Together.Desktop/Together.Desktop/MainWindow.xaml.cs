@@ -25,22 +25,24 @@ public partial class MainWindow : Window
 
     private void InitTrayIcon()
     {
-        System.Drawing.Icon icon;
-        try
-        {
-            icon = new System.Drawing.Icon(Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "icon.ico"));
-        }
-        catch
-        {
-            icon = System.Drawing.SystemIcons.Application;
-        }
-
         _trayIcon = new NotifyIcon
         {
             Text = "Together",
             Visible = true,
-            Icon = icon,
         };
+
+        try
+        {
+            var stream = System.Reflection.Assembly.GetExecutingAssembly()
+                .GetManifestResourceStream("Together.Desktop.icon.ico");
+            _trayIcon.Icon = stream != null
+                ? new System.Drawing.Icon(stream)
+                : System.Drawing.SystemIcons.Application;
+        }
+        catch
+        {
+            _trayIcon.Icon = System.Drawing.SystemIcons.Application;
+        }
 
         _trayIcon.DoubleClick += (_, _) =>
         {
@@ -109,7 +111,8 @@ public partial class MainWindow : Window
 
     private void BtnClose_Click(object sender, RoutedEventArgs e)
     {
-        Hide();
+        _trayIcon?.Dispose();
+        Application.Current.Shutdown();
     }
 
     private void ToggleMaximize() =>
@@ -117,9 +120,6 @@ public partial class MainWindow : Window
             ? WindowState.Normal
             : WindowState.Maximized;
 
-    private void OnWindowStateChanged(object? sender, EventArgs e)
-    {
-    }
 
     private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
     {
