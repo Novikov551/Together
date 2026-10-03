@@ -1,0 +1,33 @@
+﻿<Window x:Class="Together.Desktop.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:wv2="clr-namespace:Microsoft.Web.WebView2.Wpf;assembly=Microsoft.Web.WebView2.Wpf"
+        Title="Together"
+        Height="800" Width="1280"
+        MinHeight="600" MinWidth="800"
+        WindowStartupLocation="CenterScreen"
+        Background="#0e0e10">
+
+    <Grid>
+        <!-- Индикатор загрузки -->
+        <Border x:Name="LoadingOverlay"
+                Background="#0e0e10"
+                Panel.ZIndex="100">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <TextBlock Text="⏳"
+                           FontSize="48"
+                           HorizontalAlignment="Center"
+                           Foreground="White" />
+                <TextBlock Text="Загрузка..."
+                           FontSize="16"
+                           Margin="0,12,0,0"
+                           HorizontalAlignment="Center"
+                           Foreground="#999" />
+            </StackPanel>
+        </Border>
+
+        <!-- WebView2 -->
+        <wv2:WebView2 x:Name="WebView"
+                       Visibility="Hidden" />
+    </Grid>
+</Window>

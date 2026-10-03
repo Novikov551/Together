@@ -1,0 +1,83 @@
+﻿using System.Diagnostics;
+using System.Windows;
+using Microsoft.Web.WebView2.Core;
+
+namespace Together.Desktop;
+
+public partial class MainWindow : Window
+{
+    private static readonly string AppUrl = "https://together-friends.duckdns.org:8443";
+
+    public MainWindow()
+    {
+        InitializeComponent();
+        Loaded += OnWindowLoaded;
+        Closing += OnWindowClosing;
+    }
+
+    private async void OnWindowLoaded(object sender, RoutedEventArgs e)
+    {
+        try
+        {
+            var env = await CoreWebView2Environment.CreateAsync();
+            await WebView.EnsureCoreWebView2Async(env);
+
+            WebView.CoreWebView2.NewWindowRequested += OnNewWindowRequested;
+            WebView.CoreWebView2.ProcessFailed += OnProcessFailed;
+
+            WebView.CoreWebView2.Navigate(AppUrl);
+            WebView.Visibility = Visibility.Visible;
+            LoadingOverlay.Visibility = Visibility.Collapsed;
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(
+                $"Ошибка инициализации WebView2.\n\n{ex.Message}",
+                "Together",
+                MessageBoxButton.OK,
+                MessageBoxImage.Error);
+            Close();
+        }
+    }
+
+    private void OnNewWindowRequested(object? sender, CoreWebView2NewWindowRequestedEventArgs e)
+    {
+        // Открывать внешние ссылки в браузере, а не в приложении
+        e.Handled = true;
+        Process.Start(new ProcessStartInfo(e.Uri) { UseShellExecute = true });
+    }
+
+    private async void OnProcessFailed(object? sender, CoreWebView2ProcessFailedEventArgs e)
+    {
+        if (e.ProcessFailedKind == CoreWebView2ProcessFailedKind.BrowserProcessExited)
+        {
+            await Dispatcher.InvokeAsync(async () =>
+            {
+                var result = MessageBox.Show(
+                    "Процесс браузера завершился. Перезапустить?",
+                    "Together",
+                    MessageBoxButton.YesNo,
+                    MessageBoxImage.Warning);
+
+                if (result == MessageBoxResult.Yes)
+                {
+                    WebView.Visibility = Visibility.Collapsed;
+                    LoadingOverlay.Visibility = Visibility.Visible;
+                    await WebView.EnsureCoreWebView2Async();
+                    WebView.CoreWebView2.Navigate(AppUrl);
+                    WebView.Visibility = Visibility.Visible;
+                    LoadingOverlay.Visibility = Visibility.Collapsed;
+                }
+                else
+                {
+                    Close();
+                }
+            });
+        }
+    }
+
+    private void OnWindowClosing(object? sender, System.ComponentModel.CancelEventArgs e)
+    {
+        WebView?.Dispose();
+    }
+}
